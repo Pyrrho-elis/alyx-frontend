@@ -5,15 +5,15 @@ import { cookies } from 'next/headers'
 
 
 const validateAccNo = (accNo) => {
-    if (!accNo) throw 'Error: Account Number is required!'
-    if (!/^1000\d{9}$/.test(accNo.toString())) throw 'Error: Invalid Account Number!'
-    return accNo.toString()
+    if (!accNo) return { error: "Error: Account Number is required!" }
+    if (! /^1000\d{9}$/.test(accNo.toString())) return { error: "Error: Invalid Account Number!" }
+    return accNo.toString().toLowerCase()
 }
 
 const validateUsername = (username) => {
-    if (!username) throw 'Error: Username is required!'
-    if (!/^[a-zA-Z0-9_]{3,16}$/.test(username.toString()) || /\s/.test(username)) throw 'Error: Invalid Username! Username must be 3-16 characters long, contain only letters, numbers, and underscores, and have no spaces.'
-    return username.toString()
+    if (!username) return { error: "Error: Username is required!" }
+    if (! /^[a-zA-Z0-9_]{3,16}$/.test(username.toString()) || /\s/.test(username)) return { error: "Error: Invalid Username! Username must be 3-16 characters long, contain only letters, numbers, and underscores, and have no spaces." }
+    return username.toString().toLowerCase()
 }
 
 export async function POST(req) {
@@ -22,7 +22,7 @@ export async function POST(req) {
         const supabase = createClient(cookieStore)
 
         const { email, password, creator_name, acc_no, telegram_group_username, username, type } = await req.json()
-        
+
 
         if (type === 'login') {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -35,9 +35,16 @@ export async function POST(req) {
             return NextResponse.json({ session: data.session }, { status: 200 })
         }
         if (type === 'signup') {
-            const accNo = validateAccNo(acc_no)
-            const telegramUsername = validateUsername(telegram_group_username)
-            const creatorUsername = validateUsername(username)
+            // Validate account number and username
+            const accNo = validateAccNo(acc_no); // This may throw an error
+            const telegramUsername = validateUsername(telegram_group_username); // This may throw an error
+            const creatorUsername = validateUsername(username); // This may throw an error
+
+
+            if (accNo.error) return NextResponse.json({ error: accNo.error }, { status: 400 });
+            if (telegramUsername.error) return NextResponse.json({ error: telegramUsername.error }, { status: 400 });
+            if (creatorUsername.error) return NextResponse.json({ error: creatorUsername.error }, { status: 400 });
+
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -84,6 +91,7 @@ export async function POST(req) {
         return NextResponse.json({ message: 'Login successful' }, { status: 200 })
     } catch (error) {
         console.error(error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        // Ensure the error message is returned to the frontend
+        return NextResponse.json({ error: error.message || 'An error occurred' }, { status: 400 })
     }
 }
