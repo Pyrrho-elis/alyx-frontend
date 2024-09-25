@@ -4,10 +4,10 @@ import Link from "next/link"
 
 export default function LandingPage() {
   return (
-    <div className="scroll-smooth min-h-screen py-4 px-4 m-auto overflow-hidden">
+    <div className="scroll-smooth flex flex-col justify-center items-center min-h-screen py-4 px-4 m-auto overflow-x-hidden">
       <Navbar className="sticky top-0 z-50 w-full" />
       {/* Hero Section */}
-      <section className="px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+      <section className="px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
@@ -31,7 +31,7 @@ export default function LandingPage() {
       </section>
 
       {/* Add more sections here */}
-      <section id="features" className="py-20 bg-gray-50">
+      <section id="features" className="px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Features</h2>

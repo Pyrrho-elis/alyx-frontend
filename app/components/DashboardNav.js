@@ -33,7 +33,7 @@ export default function Navbar({ userEmail }) {
                 <div className="relative flex-shrink-0">
                     <Link href="/" className="flex items-center">
                         {/* <Mountain className="h-8 w-8 text-primary" /> */}
-                        <Image src={logo} alt="Logo" width={40} height={40} />
+                        <Image src={logo} alt="Logo" width={32} height={32} />
                     </Link>
                 </div>
 

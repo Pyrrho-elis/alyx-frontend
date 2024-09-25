@@ -64,11 +64,11 @@ export async function POST(req) {
                     id: userId,
                     title: 'Welcome to the Creator Page',
                     desc: 'This is a test description for the creator page',
-                    benefits: JSON.stringify([{
-                        name: 'Benefit 1',
+                    perks: JSON.stringify([{
+                        name: 'Perk 1',
                         description: 'This is a test description for the first benefit'
                     }, {
-                        name: 'Benefit 2',
+                        name: 'Perk 2',
                         description: 'This is a test description for the second benefit'
                     }]),
                     username: creatorUsername.toLowerCase(),

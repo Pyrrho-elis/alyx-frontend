@@ -26,6 +26,7 @@ export default function page() {
     const [avatarUrl, setAvatarUrl] = useState(null);
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState(false)
 
     useEffect(() => {
         if (user) {
@@ -105,7 +106,8 @@ export default function page() {
             }
 
             const result = await response.json();
-            console.log('Update successful:', result);
+            //console.log('Update successful:', result);
+            setSuccess(true)
             router.push('/dashboard/creator');
         } catch (error) {
             console.error('Error updating creator data:', error);
@@ -115,12 +117,13 @@ export default function page() {
     }
 
     return (
-        <div className='flex flex-col items-center justify-center min-h-screen py-8 px-4'>
+        <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
             <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
             {loading ? <div>Loading...</div> : (
                 <form onSubmit={handleSubmit} className='space-y-4 w-full max-w-md'>
                     <AvatarUpload avatarUrl={avatarUrl} userId={id} />
                     {error && <p className='text-red-500'>{error}</p>}
+                    {success && <p className='text-green-500'>Your page has been updated successfully!</p>}
                     <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
                         Title
                     </label>

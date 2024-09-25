@@ -57,12 +57,14 @@ export default function AvatarUpload({ userId, avatarUrl }) {
                     <AvatarFallback>Avatar</AvatarFallback>
                 </Avatar>
             ) : (
-                <div className="avatar no-image" style={{ height: 150, width: 150 }} />
+                <Avatar className="w-32 h-32">
+                    <AvatarFallback>No Avatar</AvatarFallback>
+                </Avatar>
             )}
             <div className=''>
-                <Button htmlFor="single">
+                <label className="button primary block" htmlFor="single">
                     {uploading ? 'Uploading ...' : 'Upload New'}
-                </Button>
+                </label>
                 <input
                     style={{
                         visibility: 'hidden',

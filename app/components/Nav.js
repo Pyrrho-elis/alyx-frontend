@@ -33,19 +33,23 @@ export default function Navbar() {
                 <div className="relative flex-shrink-0">
                     <Link href="/" className="flex items-center">
                         {/* <Mountain className="h-8 w-8 text-primary" /> */}
-                        <Image src={logo} alt="Logo" width={40} height={40} />
+                        <Image src={logo} alt="Logo" width={32} height={32} />
                     </Link>
                 </div>
 
                 {/* Desktop Navigation - Centered */}
                 <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:block">
                     <div className="flex space-x-4">
-                        <Button variant="ghost">
-                            <a href="#features">Features</a>
-                        </Button>
-                        <Button variant="ghost">
-                            <Link href="#pricing">Pricing</Link>
-                        </Button>
+                        <Link href="#features">
+                            <Button variant="ghost">
+                                Features
+                            </Button>
+                        </Link>
+                        <Link href="#pricing">
+                            <Button variant="ghost">
+                                Pricing
+                            </Button>
+                        </Link>
                     </div>
                 </div>
 
