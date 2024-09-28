@@ -12,12 +12,19 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet"
 
-export default function Navbar({ userEmail }) {
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+
+export default function Navbar({ userEmail, isActive, handlePublish, userName }) {
     const [isOpen, setIsOpen] = useState(false)
 
+    const handlePublishClick = () => {
+        handlePublish()
+    }
+
     return (
-        <nav className="sticky top-0 z-50 w-full">
-            <div className="relative mx-auto flex h-16 max-w-full items-center justify-between px-4 sm:px-6 lg:px-8 bg-white shadow-md">
+        <nav className="w-full top-0 z-50">
+            <div className="relative lg:m-0 flex h-16 max-w-full items-center px-16 sm:px-6 lg:px-8 bg-white shadow-md">
                 {/* Blurry background */}
                 {/* <div className="absolute inset-0 rounded-full bg-white/30 backdrop-blur-md" /> */}
                 <div className="bg-white" />
@@ -30,36 +37,70 @@ export default function Navbar({ userEmail }) {
                 /> */}
 
                 {/* Logo */}
-                <div className="relative flex-shrink-0">
-                    <Link href="/" className="flex items-center">
-                        {/* <Mountain className="h-8 w-8 text-primary" /> */}
-                        <Image src={logo} alt="Logo" width={32} height={32} />
-                    </Link>
+
+
+                <div className="flex w-full px-4 space-x-4 md:hidden">
+                    {/* <Button className="shadow-sm" variant="outline" onClick={() => console.log('Publish')}>
+                            {isActive ? 'Unpublish' : 'Publish'}
+                        </Button> */}
+                    {isActive ? (
+                        <>
+                            <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
+                                Unpublish
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button>Share</Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="">
+                                    <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
+                                    <div className="flex gap-4 p-4">
+                                        <Input className="font-bold text-base" disabled value={`alyx.pro.et/${userName}`} />
+                                        <Button>Copy</Button>
+                                    </div>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </>
+                    ) : (
+                        <div className="ml-auto hidden md:flex md:items-center">
+                            <Button className="shadow-sm" variant="outline" onClick={handlePublish}>
+                                Publish
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Desktop Navigation - Centered */}
-                <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:block">
+                <div className=" hidden  md:block">
                     <div className="flex space-x-4">
-                        <Link href="/dashboard/creator/editpage">
-                            <Button variant="ghost">
-                                Edit Design
-                            </Button>
-                        </Link>
-                        <Link href="/dashboard/creator/integrations">
-                            <Button variant="ghost">
-                                Integrations
-                            </Button>
-                        </Link>
-                        <Link href="/dashboard/creator/members">
-                            <Button variant="ghost">
-                                Members
-                            </Button>
-                        </Link>
-                        <Link href="/dashboard/creator/analytics">
-                            <Button variant="ghost">
-                                Analytics
-                            </Button>
-                        </Link>
+                        {/* <Button className="shadow-sm" variant="outline" onClick={() => console.log('Publish')}>
+                            {isActive ? 'Unpublish' : 'Publish'}
+                        </Button> */}
+                        {isActive ? (
+                            <>
+                                <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
+                                    Unpublish
+                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button>Share</Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="">
+                                        <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
+                                        <div className="flex gap-4 p-4">
+                                            <Input className="font-bold text-base" disabled value={`alyx.pro.et/${userName}`} />
+                                            <Button>Copy</Button>
+                                        </div>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </>
+                        ) : (
+                            <>
+                                <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
+                                    Publish
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -106,6 +147,6 @@ export default function Navbar({ userEmail }) {
                     </Sheet>
                 </div>
             </div>
-        </nav>
+        </nav >
     )
 }

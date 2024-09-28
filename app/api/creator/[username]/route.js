@@ -4,7 +4,6 @@ import { cookies } from 'next/headers'
 
 export async function GET(req, { params }) {
   const { username } = params;
-  console.log(username)
   const cookieStore = cookies()
   const supabase = createClient(cookieStore)
 

@@ -13,6 +13,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { SkeletonCard } from '@/app/components/Skeleton'
 
 
 export default function page() {
@@ -22,6 +23,7 @@ export default function page() {
     const [tiers, setTiers] = useState([{ name: '', price: '' }])
     const [description, setDescription] = useState('')
     const [perks, setPerks] = useState([{ name: '', desc: '' }])
+    const [youtubeUrl, setYoutubeUrl] = useState('');
     const [id, setId] = useState('')
     const [avatarUrl, setAvatarUrl] = useState(null);
     const [loading, setLoading] = useState(true)
@@ -43,6 +45,7 @@ export default function page() {
                     setTiers(JSON.parse(data.tiers) || [{ name: '', price: '' }]);
                     setDescription(data.desc || '');
                     setPerks(JSON.parse(data.perks) || [{ name: '', desc: '' }]);
+                    setYoutubeUrl(data.youtube_video_id ? `https://www.youtube.com/watch?v=${data.youtube_video_id}` : '');
                 } catch (error) {
                     console.error('Error fetching creator data:', error);
                 } finally {
@@ -53,6 +56,12 @@ export default function page() {
             fetchCreatorData();
         }
     }, [user])
+
+    function extractYoutubeId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
 
     const fetchAvatarUrl = async () => {
         const res = await fetch('/api/avatar');
@@ -87,6 +96,8 @@ export default function page() {
             return;
         }
 
+        const youtubeId = extractYoutubeId(youtubeUrl);
+
         try {
             const response = await fetch(`/api/creator/${user.user_metadata.username}`, {
                 method: 'PUT',
@@ -98,6 +109,7 @@ export default function page() {
                     tiers: JSON.stringify(tiers),
                     desc: description,
                     perks: JSON.stringify(perks),
+                    youtube_video_id: youtubeId,
                 }),
             });
 
@@ -119,11 +131,22 @@ export default function page() {
     return (
         <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
             <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
-            {loading ? <div>Loading...</div> : (
+            {loading ? <div className='flex flex-col justify-center'><SkeletonCard /></div> : (
                 <form onSubmit={handleSubmit} className='space-y-4 w-full max-w-md'>
                     <AvatarUpload avatarUrl={avatarUrl} userId={id} />
                     {error && <p className='text-red-500'>{error}</p>}
                     {success && <p className='text-green-500'>Your page has been updated successfully!</p>}
+                    <label htmlFor="youtubeUrl" className="block text-gray-700 text-sm font-bold mb-2">
+                        YouTube Video URL
+                    </label>
+                    <Input
+                        name='youtubeUrl'
+                        type="text"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={youtubeUrl}
+                        onChange={(e) => setYoutubeUrl(e.target.value)}
+                        className='w-full p-2 border rounded'
+                    />
                     <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
                         Title
                     </label>

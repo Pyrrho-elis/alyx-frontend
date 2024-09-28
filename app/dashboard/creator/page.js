@@ -10,6 +10,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { SkeletonCard } from '@/app/components/Skeleton'
 
 export default function CreatorDashboard() {
   const { user, loading, logout } = useUser()
@@ -17,7 +18,7 @@ export default function CreatorDashboard() {
   const router = useRouter()
 
   if (loading) {
-    return <div>Loading...</div>
+    return <div className='flex flex-col justify-center'><SkeletonCard /></div>
   }
 
   if (!user) {
