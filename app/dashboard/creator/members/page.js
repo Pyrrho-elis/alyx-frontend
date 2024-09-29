@@ -4,7 +4,7 @@ import { useUser } from '@/app/hooks/useUser'
 import SubList from '@/app/components/SubList'
 import { useRouter } from 'next/navigation'
 
-export default function page() {
+export default function CraetorMembersPage() {
   const { user } = useUser()
   const router = useRouter()
   const [members, setMembers] = useState([])

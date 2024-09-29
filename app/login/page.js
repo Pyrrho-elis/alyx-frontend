@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/hooks/useUser'
 
-export default function page() {
+export default function LoginPage() {
   const { user } = useUser()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

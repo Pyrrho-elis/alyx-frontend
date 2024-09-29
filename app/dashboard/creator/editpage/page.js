@@ -22,7 +22,7 @@ import {
 import YoutubeEmbed from '@/app/components/YoutubeEmbed'
 
 
-export default function page() {
+export default function EditPage() {
     const { user } = useUser()
     const router = useRouter()
     const [title, setTitle] = useState('')

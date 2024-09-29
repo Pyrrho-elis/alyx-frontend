@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import useAuth from '@/app/hooks/useAuth'
 import React from 'react'
 
-export default function page() {
+export default function RegisterSuccess() {
   
   const router = useRouter()
   const { user } = useAuth()

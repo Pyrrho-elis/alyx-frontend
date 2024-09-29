@@ -14,7 +14,7 @@ import { Card, CardHeader, CardDescription, CardTitle } from "@/components/ui/ca
 import YouTubeEmbed from '../components/YoutubeEmbed'
 import { SkeletonCard } from '../components/Skeleton';
 
-export default function page() {
+export default function CreatorPage() {
   const { creator } = useParams();
   const [creatorData, setCreatorData] = useState(null);
   const [loading, setLoading] = useState(true);
