@@ -14,6 +14,12 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { SkeletonCard } from '@/app/components/Skeleton'
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/avatar"
+import YoutubeEmbed from '@/app/components/YoutubeEmbed'
 
 
 export default function page() {
@@ -29,6 +35,7 @@ export default function page() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    const [creatorData, setCreatorData] = useState(null);
 
     useEffect(() => {
         if (user) {
@@ -41,6 +48,8 @@ export default function page() {
                         throw new Error('Failed to fetch creator data');
                     }
                     const data = await response.json();
+                    setCreatorData(data);
+                    console.log('creatorData', data);
                     setTitle(data.title || '');
                     setTiers(JSON.parse(data.tiers) || [{ name: '', price: '' }]);
                     setDescription(data.desc || '');
@@ -120,7 +129,7 @@ export default function page() {
             const result = await response.json();
             //console.log('Update successful:', result);
             setSuccess(true)
-            router.push('/dashboard/creator');
+            router.refresh();
         } catch (error) {
             console.error('Error updating creator data:', error);
             setError(error.message)
@@ -129,120 +138,172 @@ export default function page() {
     }
 
     return (
-        <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
-            <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
-            {loading ? <div className='flex flex-col justify-center'><SkeletonCard /></div> : (
-                <form onSubmit={handleSubmit} className='space-y-4 w-full max-w-md'>
-                    <AvatarUpload avatarUrl={avatarUrl} userId={id} />
-                    {error && <p className='text-red-500'>{error}</p>}
-                    {success && <p className='text-green-500'>Your page has been updated successfully!</p>}
-                    <label htmlFor="youtubeUrl" className="block text-gray-700 text-sm font-bold mb-2">
-                        YouTube Video URL
-                    </label>
-                    <Input
-                        name='youtubeUrl'
-                        type="text"
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        value={youtubeUrl}
-                        onChange={(e) => setYoutubeUrl(e.target.value)}
-                        className='w-full p-2 border rounded'
-                    />
-                    <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
-                        Title
-                    </label>
-                    <Input
-                        name='title'
-                        type="text"
-                        placeholder="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className='w-full p-2 border rounded'
-                    />
-                    <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
-                        Description
-                    </label>
-                    <Input
-                        name='description'
-                        rows={5}
-                        placeholder="Description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        className='w-full p-2 border rounded'
-                    />
-                    <label htmlFor="tiers" className="block text-gray-700 text-sm font-bold mb-2">
-                        Tier
-                    </label>
-                    <div className='flex space-x-2 items-center'>
+        <div className='flex justify-center items-center gap-32'>
+            <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
+                <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
+                {loading ? <div className='flex flex-col justify-center'><SkeletonCard /></div> : (
+                    <form onSubmit={handleSubmit} className='space-y-4 w-full max-w-md'>
+                        <AvatarUpload avatarUrl={avatarUrl} userId={id} />
+                        {error && <p className='text-red-500'>{error}</p>}
+                        {success && <p className='text-green-500'>Your page has been updated successfully!</p>}
+                        <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
+                            Title
+                        </label>
+                        <Input
+                            name='title'
+                            type="text"
+                            placeholder="Title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className='w-full p-2 border rounded'
+                        />
+                        <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
+                            Description
+                        </label>
+                        <Input
+                            name='description'
+                            rows={5}
+                            placeholder="Description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className='w-full p-2 border rounded'
+                        />
+                        <label htmlFor="tiers" className="block text-gray-700 text-sm font-bold mb-2">
+                            Tier
+                        </label>
+                        <div className='flex space-x-2 items-center'>
 
+                            <Input
+                                name='tiers'
+                                rows={5}
+                                placeholder="Tier Name"
+                                value={tiers.name}
+                                onChange={(e) => handleTierChange('name', e.target.value)}
+                                className='w-full p-2 border rounded'
+                            />
+                            <Input
+                                name='tiers'
+                                rows={5}
+                                placeholder="Tier Price"
+                                value={tiers.price}
+                                onChange={(e) => handleTierChange('price', e.target.value)}
+                                className='w-full p-2 border rounded'
+                            />
+                        </div>
+                        <label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
+                            Features and Perks
+                        </label>
+                        {perks.map((tier, index) => (
+                            <div name='perks' key={index} className='flex flex-col space-x-2 items-center'>
+                                <Card className="w-full px-4">
+                                    <CardHeader>
+                                        <CardTitle>
+                                            <Input
+                                                type="text"
+                                                placeholder={`Perk Title`}
+                                                value={tier.name}
+                                                onChange={(e) => handlePerkChange(index, 'name', e.target.value)}
+                                                className='w-1/2 p-2 border rounded'
+                                            />
+                                        </CardTitle>
+                                        <CardDescription>
+                                            <Input
+                                                type="text"
+                                                placeholder={`Perk Description`}
+                                                value={tier.desc}
+                                                onChange={(e) => handlePerkChange(index, 'desc', e.target.value)}
+                                                className='w-full p-2 border rounded'
+                                            />
+                                        </CardDescription>
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            onClick={() => removePerk(index)}
+                                        // className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded'
+                                        >
+                                            Delete
+                                        </Button>
+                                    </CardHeader>
+                                </Card>
+                            </div>
+                        ))}
+                        <Button
+                            type="button"
+                            onClick={addPerk}
+                            className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full'
+                        >
+                            Add Perk
+                        </Button>
+                        <label htmlFor="youtubeUrl" className="block text-gray-700 text-sm font-bold mb-2">
+                            {'YouTube Video URL (Optional)'}
+                        </label>
                         <Input
-                            name='tiers'
-                            rows={5}
-                            placeholder="Tier Name"
-                            value={tiers.name}
-                            onChange={(e) => handleTierChange('name', e.target.value)}
+                            name='youtubeUrl'
+                            type="text"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            value={youtubeUrl}
+                            onChange={(e) => setYoutubeUrl(e.target.value)}
                             className='w-full p-2 border rounded'
                         />
-                        <Input
-                            name='tiers'
-                            rows={5}
-                            placeholder="Tier Price"
-                            value={tiers.price}
-                            onChange={(e) => handleTierChange('price', e.target.value)}
-                            className='w-full p-2 border rounded'
-                        />
-                    </div>
-                    <label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
-                        Features and Perks
-                    </label>
-                    {perks.map((tier, index) => (
-                        <div name='perks' key={index} className='flex flex-col space-x-2 items-center'>
-                            <Card className="w-full px-4">
+
+                        <Button
+                            type="submit"
+                            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full'
+                        >
+                            Save Design
+                        </Button>
+                    </form>
+                )}
+            </div>
+            <div className='hidden lg:block w-full max-w-[390px]'>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex flex-col justify-center items-center gap-4">
+                            <Avatar className="w-32 h-32">
+                                <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
+                                <AvatarFallback>Avatar</AvatarFallback>
+                            </Avatar>
+                            <div className='flex flex-col items-center'>
+                                <p className="text-4xl font-semibold mb-2 text-blue-500">{title}</p>
+                                <p className='text-sm text-gray-500'>{description}</p>
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                        <div className="grid grid-cols-2">
+                            <Card className="px-2 border-solid border-2 border-sky-500 ">
                                 <CardHeader>
                                     <CardTitle>
-                                        <Input
-                                            type="text"
-                                            placeholder={`Perk Title`}
-                                            value={tier.name}
-                                            onChange={(e) => handlePerkChange(index, 'name', e.target.value)}
-                                            className='w-1/2 p-2 border rounded'
-                                        />
+                                        <span className="text-lg font-semibold text-blue-500">{tiers.name}</span>
                                     </CardTitle>
                                     <CardDescription>
-                                        <Input
-                                            type="text"
-                                            placeholder={`Perk Description`}
-                                            value={tier.price}
-                                            onChange={(e) => handlePerkChange(index, 'desc', e.target.value)}
-                                            className='w-full p-2 border rounded'
-                                        />
+                                        <span className="text-gray-600 font-bold">Br {tiers.price} /month</span>
                                     </CardDescription>
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        onClick={() => removePerk(index)}
-                                    // className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded'
-                                    >
-                                        Delete
-                                    </Button>
                                 </CardHeader>
                             </Card>
                         </div>
-                    ))}
-                    <Button
-                        type="button"
-                        onClick={addPerk}
-                        className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full'
-                    >
-                        Add Perk
-                    </Button>
-                    <Button
-                        type="submit"
-                        className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full'
-                    >
-                        Update
-                    </Button>
-                </form>
-            )}
+                        <span className='text-xl'>Inside the community:</span>
+                        {perks.map((perk, index) => (
+                            <div key={index}>
+                                <Card className="w-full p-4 mb-2">
+                                    <CardTitle>
+                                        <span className="text-lg font-semibold mb-2 text-blue-500">{perk.name}</span>
+                                    </CardTitle>
+                                    <CardDescription>
+                                        <span className="text-gray-600 font-bold">{perk.desc}</span>
+                                    </CardDescription>
+                                </Card>
+                            </div>
+                        ))}
+                        {youtubeUrl && youtubeUrl.length > 0
+                            ? <div className="rounded-sm">
+                                <YoutubeEmbed videoId={youtubeUrl} />
+                            </div>
+                            : <></>
+                        }
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }

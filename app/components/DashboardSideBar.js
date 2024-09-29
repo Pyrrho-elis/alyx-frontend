@@ -6,7 +6,7 @@ import Image from 'next/image'
 
 export default function DashboardSideBar() {
     return (
-        <div className='hidden md:flex flex-col items-center gap-4 left-0 top-0 pt-4 z-50 w-40 overflow-hidden h-screen fixed bg-white shadow-xl'>
+        <div className='hidden md:flex flex-col items-center gap-4 left-0 top-0 pt-4 z-50 w-40 overflow-hidden h-screen fixed bg-white'>
             <div className="relative flex-shrink-0 hidden md:flex">
                 <Link href="/" className="flex items-center">
                     {/* <Mountain className="h-8 w-8 text-primary" /> */}

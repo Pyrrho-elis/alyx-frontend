@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import Navbar from "./components/Nav"
 import Link from "next/link"
+import { ArrowBigRightDash, Star } from "lucide-react"
 
 export default function LandingPage() {
   return (
@@ -52,20 +53,21 @@ export default function LandingPage() {
                 },
                 {
                   name: 'Flexible Monetization',
-                  description: 'Choose from various monetization options including subscriptions, pay-per-view content, and digital products.',
+                  description: 'Choose the monetization option that suits you best.',
                 },
                 {
-                  name: 'Analytics Dashboard',
-                  description: "Gain valuable insights into your community's engagement and revenue streams with our intuitive analytics.",
+                  name: 'Automatic Member Management',
+                  description: 'Out system will automatically moderate your community members.',
                 },
                 {
-                  name: 'Content Management',
-                  description: 'Easily create, schedule, and distribute your content across multiple platforms from a single interface.',
+                  name: 'Cash Out Anytime',
+                  description: 'Revenue made on the platform can be cashed out at any time.',
                 },
               ].map((feature) => (
                 <div key={feature.name} className="relative">
                   <dt>
                     <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                      <Star />
                       {/* You can add icons here if desired */}
                     </div>
                     <p className="ml-16 text-lg leading-6 font-medium text-gray-900">{feature.name}</p>
@@ -90,29 +92,17 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-16 space-y-12 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-x-8">
+          <div className="mt-16 justify-center space-y-12 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-8">
             {[
               {
                 name: 'Starter',
                 price: 'Free',
-                description: 'Perfect for new creators looking to monetize their community.',
+                description: 'Perfect for creators looking to monetize their community.',
                 features: [
                   'Up to 100 community members',
                   'Basic analytics',
                   'Standard support',
-                  '5% transaction fee',
-                ],
-              },
-              {
-                name: 'Pro',
-                price: '$29',
-                description: 'Ideal for growing creators with established communities.',
-                features: [
-                  'Up to 1,000 community members',
-                  'Advanced analytics',
-                  'Priority support',
-                  '3% transaction fee',
-                  'Custom branding',
+                  '15% transaction fee',
                 ],
               },
               {
@@ -122,15 +112,14 @@ export default function LandingPage() {
                 features: [
                   'Unlimited community members',
                   'Premium analytics with API access',
-                  'Dedicated account manager',
                   'Negotiable transaction fee',
-                  'White-label solution',
-                  'Custom integrations',
+                  'On-premise support',
+                  '24×7×365 premium enterprise support',
                 ],
               },
             ].map((plan) => (
-              <div key={plan.name} className="relative p-8 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col">
-                <div className="flex-1">
+              <div key={plan.name} className="relative p-8 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col gap-4">
+                <div className="flex-1 gap-4">
                   <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
                   {typeof plan.price === 'string' ? (
                     <p className="mt-4 flex items-baseline text-gray-900">
@@ -153,9 +142,20 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-                <Button className="mt-8 block w-full py-3 px-6 border border-transparent rounded-md text-center font-medium">
+                {/* <Button>
                   {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
-                </Button>
+                </Button> */}
+                <div className="w-full">
+                  {plan.name === 'Enterprise' ? (
+                    <Link className="w-full" href="/contact">
+                      <Button className="w-full">Contact Sales</Button>
+                    </Link>
+                  ) : (
+                    <Link href="/apply">
+                      <Button className="w-full">Get Started</Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
           </div>

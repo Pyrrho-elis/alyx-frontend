@@ -66,6 +66,7 @@ export default function CreatorLayout({ children }) {
                 <div className="flex-1">
                     <DashboardNav userEmail={email} isActive={isActive} handlePublish={handlePublish} userName={username} />
                     {children}
+                    {/* <Preview creatorData={user} avatarUrl={user.avatar} /> */}
                 </div>
             </main>
         </div>

@@ -23,8 +23,8 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
     }
 
     return (
-        <nav className="w-full top-0 z-50">
-            <div className="relative lg:m-0 flex h-16 max-w-full items-center px-16 sm:px-6 lg:px-8 bg-white shadow-md">
+        <nav className="sticky w-full top-0 z-50">
+            <div className="relative lg:m-0 flex h-[65px] max-w-full items-center px-16 sm:px-6 lg:px-8 bg-white border-b border-gray-300">
                 {/* Blurry background */}
                 {/* <div className="absolute inset-0 rounded-full bg-white/30 backdrop-blur-md" /> */}
                 <div className="bg-white" />
