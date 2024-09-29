@@ -60,8 +60,8 @@ export default function LandingPage() {
                   description: 'Out system will automatically moderate your community members.',
                 },
                 {
-                  name: 'Cash Out Anytime',
-                  description: 'Revenue made on the platform can be cashed out at any time.',
+                  name: 'We Process The Payments',
+                  description: 'Creators only have to worry about their content, we will handle the rest.',
                 },
               ].map((feature) => (
                 <div key={feature.name} className="relative">
@@ -102,6 +102,7 @@ export default function LandingPage() {
                   'Up to 100 community members',
                   'Basic analytics',
                   'Standard support',
+                  'Payment processing team',
                   '15% transaction fee',
                 ],
               },
