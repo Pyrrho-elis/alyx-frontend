@@ -13,7 +13,7 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "Alyx",
+  title: "Subzz",
   description: "Monetize Your Telegram Community",
 };
 

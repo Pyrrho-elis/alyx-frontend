@@ -115,7 +115,7 @@ export default function CreatorPage() {
         <p className='text-sm text-gray-500'>{creatorData.description}</p>
         <YouTubeEmbed videoId={youtubeVideoId} />
         <div className='flex flex-col justify-center items-center'>
-          <p className='text-sm text-gray-500'>@{creatorData.username}</p> powered by <Link href='/' className='text-blue-500 hover:underline'>Alyx</Link>
+          <p className='text-sm text-gray-500'>@{creatorData.username}</p> powered by <Link href='/' className='text-blue-500 hover:underline'>Subzz</Link>
         </div>
       </div>
       <div  className={`fixed bottom-0 left-0 right-0 p-4 flex flex-col justify-center items-center ${!creatorData.isActive ? 'opacity-50' : ''}`}>

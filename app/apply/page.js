@@ -23,7 +23,7 @@ export default function ApplyPage() {
     useEffect(() => {
         swal({
             title: 'Instructions',
-            text: "Before you apply, let's quickly set up your Telegram group. It's easy and takes less than a minute! \n 1. Open your Telegram group \n 2. Add @alyxSupport bot as an admin \n 3. That's it! You're ready to apply",
+            text: "Before you apply, let's quickly set up your Telegram group. It's easy and takes less than a minute! \n 1. Open your Telegram group \n 2. Add @alyxSupportBot bot as an admin \n 3. That's it! You're ready to apply",
             icon: 'info',
             showCancelButton: false,
             confirmButtonText: 'Got it!',

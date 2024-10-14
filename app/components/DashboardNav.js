@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 
 export default function Navbar({ userEmail, isActive, handlePublish, userName }) {
     const [isOpen, setIsOpen] = useState(false)
+    const [isCopied, setIsCopied] = useState(false)
 
     const handlePublishClick = () => {
         handlePublish()
@@ -55,8 +56,14 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
                                 <DropdownMenuContent className="">
                                     <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
                                     <div className="flex gap-4 p-4">
-                                        <Input className="font-bold text-base" disabled value={`alyx.pro.et/${userName}`} />
-                                        <Button>Copy</Button>
+                                        <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${userName}`} />
+                                        <Button onClick={() => {
+                                            navigator.clipboard.writeText(`subzz.vercel.app/${userName}`)
+                                            setIsCopied(true)
+                                            setTimeout(() => {
+                                                setIsCopied(false)
+                                            }, 2000)
+                                        }}>{isCopied ? 'Copied' : 'Copy'}</Button>
                                     </div>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -88,8 +95,14 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
                                     <DropdownMenuContent className="">
                                         <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
                                         <div className="flex gap-4 p-4">
-                                            <Input className="font-bold text-base" disabled value={`alyx.pro.et/${userName}`} />
-                                            <Button>Copy</Button>
+                                            <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${userName}`} />
+                                            <Button onClick={() => {
+                                            navigator.clipboard.writeText(`subzz.vercel.app/${userName}`)
+                                            setIsCopied(true)
+                                            setTimeout(() => {
+                                                setIsCopied(false)
+                                            }, 2000)
+                                        }}>{isCopied ? 'Copied' : 'Copy'}</Button>
                                         </div>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
