@@ -2,19 +2,22 @@ import { Button } from "@/components/ui/button"
 import Navbar from "./components/Nav"
 import Link from "next/link"
 import { ArrowBigRightDash, Star } from "lucide-react"
+import FadeUp from "./components/FadeUp"
 
 export default function LandingPage() {
   return (
     <div className="scroll-smooth flex flex-col justify-center items-center min-h-screen py-4 px-4 m-auto overflow-x-hidden">
-      <Navbar className="sticky top-0 z-50 w-full" />
+      {/* <Navbar  /> */}
       {/* Hero Section */}
       <section className="px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-              <span className="block">Monetize Your</span>
-              <span className="block text-indigo-600">Telgram Community</span>
-            </h1>
+            <FadeUp delay={0.3}>
+              <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+                <span className="block">Monetize Your</span>
+                <span className="block text-indigo-600">Telgram Community</span>
+              </h1>
+            </FadeUp>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               Streamline your community monetization with hassle-free payments, automatic member management, and a single, shareable link to your content.
             </p>

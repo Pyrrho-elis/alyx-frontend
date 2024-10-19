@@ -16,7 +16,7 @@ export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
 
     return (
-        <nav className="sticky top-0 z-50 w-full">
+        <nav className="sticky top-4 z-50 w-full">
             <div className="relative mx-auto mt-4 flex h-16 max-w-3xl items-center justify-between rounded-full px-4 sm:px-6 lg:px-8 bg-white shadow-md">
                 {/* Blurry background */}
                 {/* <div className="absolute inset-0 rounded-full bg-white/30 backdrop-blur-md" /> */}
