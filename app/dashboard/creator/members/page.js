@@ -60,7 +60,7 @@ export default function CraetorMembersPage() {
   }, [user]);
 
   return (
-    <div className='flex flex-col justify-center'>
+    <div className='flex justify-around w-full items-center'>
         <SubList members={members} removeMember={(userID) => {handleRemoveMember(userID)}}/>
     </div>
   )

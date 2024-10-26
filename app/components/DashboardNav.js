@@ -1,49 +1,76 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { Mountain, Menu } from "lucide-react"
-import Image from "next/image"
-import logo from "@/app/public/LOGO.png"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import {
-    Sheet,
-    SheetContent,
-    SheetTrigger,
-} from "@/components/ui/sheet"
+import { useUser } from '@/app/hooks/useUser'
+import { useCreatorData } from "../dashboard/creator/creatorDataContext"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
 
-export default function Navbar({ userEmail, isActive, handlePublish, userName }) {
+export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
     const [isCopied, setIsCopied] = useState(false)
+    const [email, setEmail] = useState('')
+    const [isActive, setIsActive] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [username, setUsername] = useState('')
+    const { user, logout } = useUser()
 
-    const handlePublishClick = () => {
-        handlePublish()
+
+    const handlePublishClick = async () => {
+        try {
+            const response = await fetch(`/api/creator/${username}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    isActive: !isActive,
+                }),
+            }
+            );
+            if (!response.ok) {
+                throw new Error('Failed to update creator data');
+            }
+            const data = await response.json();
+            console.log('Update successful:', data);
+            // setIsActive(data.isActive);
+            fetchCreatorData();
+        } catch (error) {
+            console.error('Error updating creator data:', error);
+        }
     }
 
+    const fetchCreatorData = async () => {
+        try {
+            const response = await fetch(`/api/creator/${user.user_metadata.username}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch creator data');
+            }
+            const data = await response.json();
+            setIsActive(data.isActive);
+        } catch (error) {
+            console.error('Error fetching creator data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            setEmail(user.email)
+            setUsername(user.user_metadata.username)
+            fetchCreatorData();
+        }
+    }, [user])
+
     return (
-        <nav className="sticky w-full top-0 z-50">
-            <div className="relative lg:m-0 flex h-[65px] max-w-full items-center px-16 sm:px-6 lg:px-8 bg-white border-b border-gray-300">
-                {/* Blurry background */}
-                {/* <div className="absolute inset-0 rounded-full bg-white/30 backdrop-blur-md" /> */}
-                <div className="bg-white" />
-
-                {/* Grainy texture */}
-                {/* <div className="absolute inset-0 rounded-full opacity-50 mix-blend-multiply"
-                    style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                    }}
-                /> */}
-
-                {/* Logo */}
-
-
+        <nav className="sticky w-full top-0 z-50 bg-gray-300">
+            <div className="relative lg:m-0 flex h-[65px] max-w-full items-center px-8 sm:px-2 md:px-2 lg:px-8 bg-white border-b border-gray-300">
+                <div className="bg-gray-300" />
                 <div className="flex w-full px-4 space-x-4 md:hidden">
-                    {/* <Button className="shadow-sm" variant="outline" onClick={() => console.log('Publish')}>
-                            {isActive ? 'Unpublish' : 'Publish'}
-                        </Button> */}
                     {isActive ? (
                         <>
                             <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
@@ -56,9 +83,9 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
                                 <DropdownMenuContent className="">
                                     <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
                                     <div className="flex gap-4 p-4">
-                                        <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${userName}`} />
+                                        <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${username}`} />
                                         <Button onClick={() => {
-                                            navigator.clipboard.writeText(`subzz.vercel.app/${userName}`)
+                                            navigator.clipboard.writeText(`subzz.vercel.app/${username}`)
                                             setIsCopied(true)
                                             setTimeout(() => {
                                                 setIsCopied(false)
@@ -70,7 +97,7 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
                         </>
                     ) : (
                         <div className="ml-auto hidden md:flex md:items-center">
-                            <Button className="shadow-sm" variant="outline" onClick={handlePublish}>
+                            <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
                                 Publish
                             </Button>
                         </div>
@@ -80,9 +107,6 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
                 {/* Desktop Navigation - Centered */}
                 <div className=" hidden  md:block">
                     <div className="flex space-x-4">
-                        {/* <Button className="shadow-sm" variant="outline" onClick={() => console.log('Publish')}>
-                            {isActive ? 'Unpublish' : 'Publish'}
-                        </Button> */}
                         {isActive ? (
                             <>
                                 <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
@@ -95,14 +119,14 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
                                     <DropdownMenuContent className="">
                                         <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
                                         <div className="flex gap-4 p-4">
-                                            <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${userName}`} />
+                                            <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${username}`} />
                                             <Button onClick={() => {
-                                            navigator.clipboard.writeText(`subzz.vercel.app/${userName}`)
-                                            setIsCopied(true)
-                                            setTimeout(() => {
-                                                setIsCopied(false)
-                                            }, 2000)
-                                        }}>{isCopied ? 'Copied' : 'Copy'}</Button>
+                                                navigator.clipboard.writeText(`subzz.vercel.app/${username}`)
+                                                setIsCopied(true)
+                                                setTimeout(() => {
+                                                    setIsCopied(false)
+                                                }, 2000)
+                                            }}>{isCopied ? 'Copied' : 'Copy'}</Button>
                                         </div>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -119,45 +143,20 @@ export default function Navbar({ userEmail, isActive, handlePublish, userName })
 
                 {/* Desktop CTA Buttons */}
                 <div className="relative ml-auto hidden md:flex md:items-center">
-                    {/* <Link href="/apply"> */}
-                    <Button>{userEmail}</Button>
-                    {/* </Link> */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button>{email}</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="flex flex-col gap-2 justify-around items-center p-2">
+                            <DropdownMenuLabel>Account Settings</DropdownMenuLabel>
+                            <Button className="w-full" onClick={logout}>Logout</Button>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 {/* Mobile Menu Button */}
                 <div className="relative md:hidden">
-                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Menu className="h-6 w-6" />
-                                <span className="sr-only">Open menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                            <nav className="flex flex-col space-y-4">
-                                <Link href="/dashboard/creator/editpage" className="text-lg font-semibold" onClick={() => setIsOpen(false)}>
-                                    <Button variant="ghost">
-                                        Edit Design
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard/creator/integrations" className="text-lg font-semibold" onClick={() => setIsOpen(false)}>
-                                    <Button variant="ghost">
-                                        Integrations
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard/creator/members" className="justify-start" onClick={() => setIsOpen(false)}>
-                                    <Button variant="ghost">
-                                        Members
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard/creator/analytics" className="justify-start" onLink={() => setIsOpen(false)}>
-                                    <Button variant="ghost">
-                                        Analytics
-                                    </Button>
-                                </Link>
-                            </nav>
-                        </SheetContent>
-                    </Sheet>
+                    <SidebarTrigger />
                 </div>
             </div>
         </nav >

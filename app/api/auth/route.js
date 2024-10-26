@@ -21,7 +21,8 @@ export async function POST(req) {
         const cookieStore = cookies()
         const supabase = createClient(cookieStore)
 
-        const { email, password, creator_name, acc_no, telegram_group_username, username, type } = await req.json()
+        const { email, password, creator_name, username, type } = await req.json()
+        // console.log(email, password, creator_name, username, type)
 
 
         if (type === 'login') {
@@ -36,29 +37,29 @@ export async function POST(req) {
         }
         if (type === 'signup') {
             // Validate account number and username
-            const accNo = validateAccNo(acc_no); // This may throw an error
-            const telegramUsername = validateUsername(telegram_group_username); // This may throw an error
+            // const accNo = validateAccNo(acc_no); // This may throw an error
+            // const telegramUsername = validateUsername(telegram_group_username); // This may throw an error
             const creatorUsername = validateUsername(username); // This may throw an error
 
 
-            if (accNo.error) return NextResponse.json({ error: accNo.error }, { status: 400 });
-            if (telegramUsername.error) return NextResponse.json({ error: telegramUsername.error }, { status: 400 });
+            // if (accNo.error) return NextResponse.json({ error: accNo.error }, { status: 400 });
+            // if (telegramUsername.error) return NextResponse.json({ error: telegramUsername.error }, { status: 400 });
             if (creatorUsername.error) return NextResponse.json({ error: creatorUsername.error }, { status: 400 });
 
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        creator_name,
-                        acc_no: accNo,
-                        telegram_group_username: telegramUsername.toLowerCase(),
-                        username: creatorUsername.toLowerCase(),
-                    },
-                },
-            })
+            const { data, error } = await supabase.auth.signUp(
+                {
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            creator_name: creator_name,
+                            username: creatorUsername.toLowerCase(),
+                        },
+                    }
+                })
+            console.log(data)
             const userId = data.user.id
-            const { data: creatorData, error: creatorError } = await supabase
+            const { Cdata: creatorData, error: creatorError } = await supabase
                 .from('creators_page')
                 .insert({
                     id: userId,
@@ -72,7 +73,7 @@ export async function POST(req) {
                         description: 'This is a test description for the second benefit'
                     }]),
                     username: creatorUsername.toLowerCase(),
-                    telegram_group_username: telegramUsername.toLowerCase(),
+                    // telegram_group_username: telegramUsername.toLowerCase(),
                     tiers: JSON.stringify([{
                         name: 'Tier 1',
                         price: 1000,

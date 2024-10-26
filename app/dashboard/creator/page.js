@@ -1,20 +1,11 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useUser } from '@/app/hooks/useUser'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from "@/components/ui/button"
-import { Menu } from "lucide-react"
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import { SkeletonCard } from '@/app/components/Skeleton'
 
 export default function CreatorDashboard() {
   const { user, loading, logout } = useUser()
-  const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
 
   if (loading) {

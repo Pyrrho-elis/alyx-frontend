@@ -2,6 +2,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "./components/Nav";
 import FadeUp from "./components/FadeUp";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,10 +26,11 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <FadeUp yPos={"-100px"}>
-          <Navbar />
-        </FadeUp>
-        {children}
+        <SidebarProvider>
+          {/* <div className="w-full"> */}
+            {children}
+          {/* </div> */}
+        </SidebarProvider>
       </body>
     </html>
   );

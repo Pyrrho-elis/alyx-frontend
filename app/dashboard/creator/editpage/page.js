@@ -138,7 +138,7 @@ export default function EditPage() {
     }
 
     return (
-        <div className='flex justify-center items-center gap-32'>
+        <div className='flex justify-around w-full items-center'>
             <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
                 <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
                 {loading ? <div className='flex flex-col justify-center'><SkeletonCard /></div> : (

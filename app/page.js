@@ -6,9 +6,12 @@ import FadeUp from "./components/FadeUp"
 
 export default function LandingPage() {
   return (
-    <div className="scroll-smooth flex flex-col justify-center items-center min-h-screen py-4 px-4 m-auto overflow-x-hidden">
+    <div className="scroll-smooth flex flex-col justify-center min-h-screen py-4 px-4 m-auto overflow-x-hidden">
       {/* <Navbar  /> */}
       {/* Hero Section */}
+      <FadeUp yPos={"-100px"}>
+        <Navbar />
+      </FadeUp>
       <section className="px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
