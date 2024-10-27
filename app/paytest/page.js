@@ -5,13 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 
 export default function PayTest() {
     const { user_id, creator_id, phone_number, first_name, last_name } = useParams();
-    if (!user_id || !creator_id || !phone_number || !first_name || !last_name) {
-        return <div>Error</div>
-    }
-    const [loading, setLoading] = useState(false);
-    const [paymentPageContent, setPaymentPageContent] = useState('');
     const iframeRef = useRef(null);
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [paymentPageContent, setPaymentPageContent] = useState('');
+
+
+
 
     const handleTip = async () => {
         setLoading(true);
@@ -161,6 +161,10 @@ export default function PayTest() {
             });
         }
     }, [paymentPageContent]);
+
+    if (!user_id || !creator_id || !phone_number || !first_name || !last_name) {
+        return <div>Error</div>
+    }
 
     return (
         <div>
