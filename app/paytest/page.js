@@ -5,6 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 
 export default function PayTest() {
     const { user_id, creator_id, phone_number, first_name, last_name } = useParams();
+    if (!user_id || !creator_id || !phone_number || !first_name || !last_name) {
+        return <div>Error</div>
+    }
     const [loading, setLoading] = useState(false);
     const [paymentPageContent, setPaymentPageContent] = useState('');
     const iframeRef = useRef(null);
@@ -22,11 +25,11 @@ export default function PayTest() {
                 const { redirectUrl } = await payResponse.json();
                 console.log('Redirect URL:', redirectUrl);
                 const proxyUrl = `/api/proxy?url=${encodeURIComponent(redirectUrl)}`;
-                
+
                 const proxyResponse = await fetch(proxyUrl);
                 if (proxyResponse.ok) {
                     const content = await proxyResponse.text();
-                    console.log('Received content length:', content.length);
+                    // console.log('Received content length:', content.length);
                     setPaymentPageContent(content);
                 } else {
                     console.error('Proxy response not OK:', proxyResponse.status);
@@ -44,6 +47,24 @@ export default function PayTest() {
         }
     };
 
+    const handleStoreSubscriber = async () => {
+        const storeResponse = fetch('/api/store-subscriber', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id,
+                creator_id
+            })
+        });
+        if (!storeResponse.ok) {
+            throw new Error('Failed to store subscriber');
+        }
+        const data = await storeResponse.json();
+        return data;
+    }
+
     const handlePaymentResponse = (response) => {
         console.log('Payment response:', response);
         if (response.status === 1) { // Assuming 1 is the success status
@@ -52,6 +73,7 @@ export default function PayTest() {
             // Store user (you'll implement this part)
             // storeUser(response.user);
             // Redirect to success page
+            handleStoreSubscriber();
             alert('Success!');
             router.push('/success');
         } else if (response.status === 0) {
@@ -67,7 +89,7 @@ export default function PayTest() {
         if (paymentPageContent && iframeRef.current) {
             const iframe = iframeRef.current;
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            
+
             // Inject script to override fetch and XMLHttpRequest
             const script = iframeDoc.createElement('script');
             script.textContent = `
@@ -158,9 +180,9 @@ export default function PayTest() {
             {paymentPageContent && (
                 <div>
                     <h2>Payment Page:</h2>
-                    <iframe 
+                    <iframe
                         ref={iframeRef}
-                        style={{ width: '100%', height: '600px', border: '1px solid #ccc' }}
+                        style={{ width: 'vw', height: '600px', border: '1px solid #ccc' }}
                         sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
                     />
                 </div>
