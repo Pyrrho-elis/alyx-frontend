@@ -13,7 +13,6 @@ export async function POST(req) {
             .from('group_integrations')
             .select('*')
             .eq('integration_code', integrationCode)
-            .gte('created_at', new Date().toISOString());
 
         if (error) throw error;
 

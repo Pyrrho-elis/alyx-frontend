@@ -1,12 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function PayTest() {
-    const { user_id, creator_id, phone_number, first_name, last_name } = useParams();
-    const iframeRef = useRef(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const user_id = searchParams.get('user_id');
+    const creator_id = searchParams.get('creator_id');
+    const first_name = searchParams.get('first_name');
+    // const { user_id, creator_id, phone_number, first_name, last_name } = useParams();
+    // const { user_id, creator_id, first_name } = router.query;
+    const iframeRef = useRef(null);
     const [loading, setLoading] = useState(false);
     const [paymentPageContent, setPaymentPageContent] = useState('');
 
@@ -162,7 +167,7 @@ export default function PayTest() {
         }
     }, [paymentPageContent]);
 
-    if (!user_id || !creator_id || !phone_number || !first_name || !last_name) {
+    if (!user_id || !creator_id || !first_name) {
         return <div>Error</div>
     }
 
@@ -173,9 +178,7 @@ export default function PayTest() {
                 Subscriber Info
                 {user_id && <p>User ID: {user_id}</p>}
                 {creator_id && <p>Creator ID: {creator_id}</p>}
-                {phone_number && <p>Phone Number: {phone_number}</p>}
                 {first_name && <p>First Name: {first_name}</p>}
-                {last_name && <p>Last Name: {last_name}</p>}
             </div>
             <button onClick={handleTip} disabled={loading}>
                 {loading ? 'Processing...' : 'Give Tip'}
