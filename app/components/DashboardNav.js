@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
 
-const Navbar = React.memo(({ user, logout }) => {
+function Navbar({ user, logout }) {
     const [isOpen, setIsOpen] = useState(false)
     const [isCopied, setIsCopied] = useState(false)
     const [email, setEmail] = useState('')
@@ -157,6 +157,6 @@ const Navbar = React.memo(({ user, logout }) => {
             </div>
         </nav >
     )
-})
+}
 
-export default Navbar
+export default React.memo(Navbar);
