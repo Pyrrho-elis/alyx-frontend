@@ -1,23 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useUser } from '@/app/hooks/useUser'
-import { useCreatorData } from "../dashboard/creator/creatorDataContext"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
 
-export default function Navbar() {
+const Navbar = React.memo(({ user, logout }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [isCopied, setIsCopied] = useState(false)
     const [email, setEmail] = useState('')
     const [isActive, setIsActive] = useState(false)
     const [loading, setLoading] = useState(true)
     const [username, setUsername] = useState('')
-    const { user, logout } = useUser()
-
 
     const handlePublishClick = async () => {
         try {
@@ -36,7 +33,6 @@ export default function Navbar() {
             }
             const data = await response.json();
             console.log('Update successful:', data);
-            // setIsActive(data.isActive);
             fetchCreatorData();
         } catch (error) {
             console.error('Error updating creator data:', error);
@@ -161,4 +157,6 @@ export default function Navbar() {
             </div>
         </nav >
     )
-}
+})
+
+export default Navbar

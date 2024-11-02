@@ -5,10 +5,14 @@ import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function PayTest() {
     const router = useRouter();
+    const [userData, setUserData] = useState("loading");
+    const [error, setError] = useState(null)
+    const [status, setStatus] = useState(null);
     const searchParams = useSearchParams();
-    const user_id = searchParams.get('user_id');
-    const creator_id = searchParams.get('creator_id');
-    const first_name = searchParams.get('first_name');
+    const token = searchParams.get('token');
+    // const user_id = searchParams.get('user_id');
+    // const creator_id = searchParams.get('creator_id');
+    // const first_name = searchParams.get('first_name');
     // const { user_id, creator_id, phone_number, first_name, last_name } = useParams();
     // const { user_id, creator_id, first_name } = router.query;
     const iframeRef = useRef(null);
@@ -38,15 +42,15 @@ export default function PayTest() {
                     setPaymentPageContent(content);
                 } else {
                     console.error('Proxy response not OK:', proxyResponse.status);
-                    alert('Failed to load payment page.');
+                    // alert('Failed to load payment page.');
                 }
             } else {
                 console.error('Pay response not OK:', payResponse.status);
-                alert('Failed to get payment link.');
+                // alert('Failed to get payment link.');
             }
         } catch (error) {
             console.error('Error during payment:', error);
-            alert('An error occurred while processing the payment.');
+            // alert('An error occurred while processing the payment.');
         } finally {
             setLoading(false);
         }
@@ -70,24 +74,36 @@ export default function PayTest() {
         return data;
     }
 
-    const handlePaymentResponse = (response) => {
-        console.log('Payment response:', response);
-        if (response.status === 1) { // Assuming 1 is the success status
-            // Close iframe
-            setPaymentPageContent('');
-            // Store user (you'll implement this part)
-            // storeUser(response.user);
-            // Redirect to success page
-            handleStoreSubscriber();
-            alert('Success!');
-            router.push('/success');
-        } else if (response.status === 0) {
-            // Transaction is pending
-            console.log('Transaction is pending. Please wait.');
-        } else if (response.status === 2) {
-            // Transaction failed or other status
-            alert(`Payment failed: ${response.message}`);
+    const handlePaymentResponse = async (response) => {
+        const res = await fetch('/api/verify-payment-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({response: response, token,  action: 'subscribe'})
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setStatus(data.message);
+            console.log('Data:', data);
         }
+        // console.log('Payment response:', response);
+        // if (response.status === 1) { // Assuming 1 is the success status
+        //     // Close iframe
+        //     setPaymentPageContent('');
+        //     // Store user (you'll implement this part)
+        //     // storeUser(response.user);
+        //     // Redirect to success page
+        //     handleStoreSubscriber();
+        //     alert('Success!');
+        //     router.push('/success');
+        // } else if (response.status === 0) {
+        //     // Transaction is pending
+        //     console.log('Transaction is pending. Please wait.');
+        // } else if (response.status === 2) {
+        //     // Transaction failed or other status
+        //     alert(`Payment failed: ${response.message}`);
+        // }
     };
 
     useEffect(() => {
@@ -167,35 +183,73 @@ export default function PayTest() {
         }
     }, [paymentPageContent]);
 
-    if (!user_id || !creator_id || !first_name) {
-        return <div>Error</div>
+    useEffect(() => {
+        const handleTokenVerification = async () => {
+            if (token) {
+                try {
+                    
+                } catch (error) {
+                    
+                }
+                // Verify token and get user data
+                console.log('Verifying token...');
+                const response = await fetch(`/api/verify-payment-token?`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({token, action: 'verify'})
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.error) {
+                        setError(data.error);
+                    } else {
+                        setUserData(token);
+                    }
+                } else {
+                    setError(response.statusText);
+                }
+            }
+        }
+        handleTokenVerification();
+        // handleTip()
+    }, [token]);
+
+    if (error) {
+        return <div>Error: {error}</div>
     }
 
+    // if (userData == "loading") {
+    //     return <div>Loading...</div>
+    // } else {
+    //     handleTip()
+    // }
+
     return (
-        <div>
+        <div className='w-full h-full'>
             <h1>Tip Pyrrho</h1>
             <div>
                 Subscriber Info
-                {user_id && <p>User ID: {user_id}</p>}
-                {creator_id && <p>Creator ID: {creator_id}</p>}
-                {first_name && <p>First Name: {first_name}</p>}
+                {userData && <p>User ID: {userData}</p>}
+                {status && <p>Status: {status}</p>}
             </div>
             <button onClick={handleTip} disabled={loading}>
                 {loading ? 'Processing...' : 'Give Tip'}
             </button>
 
             {paymentPageContent && (
-                <div>
-                    <h2>Payment Page:</h2>
+                <div className='w-full h-screen'>
+                    {/* <h2>Payment Page:</h2> */}
                     <iframe
                         ref={iframeRef}
-                        style={{ width: 'vw', height: '600px', border: '1px solid #ccc' }}
+                        style={{ width: '100%', height: '100%', border: '1px solid #ccc' }}
                         sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
                     />
                 </div>
             )}
 
-            {!paymentPageContent && <p>No payment page loaded yet.</p>}
+            {!paymentPageContent && <p>Loading...</p>}
         </div>
     );
 }

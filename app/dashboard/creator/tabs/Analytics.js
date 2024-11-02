@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function AnalyticsPage() {
+export default function Analytics() {
   return (
     <div>
       Under Construction

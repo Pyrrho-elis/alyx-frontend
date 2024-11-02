@@ -1,4 +1,4 @@
-import { Brush, Calendar, ChartLine, Home, Inbox, Plug2, Search, Settings, Users } from "lucide-react"
+import { Brush, Plug2, Users, ChartLine } from "lucide-react"
 
 import {
   Sidebar,
@@ -11,31 +11,26 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Menu items.
 const items = [
   {
     title: "Edit Page",
-    url: "/dashboard/creator/editpage",
     icon: Brush,
   },
   {
     title: "Integrations",
-    url: "/dashboard/creator/integrations",
     icon: Plug2,
   },
   {
     title: "Members",
-    url: "/dashboard/creator/members",
     icon: Users,
   },
   {
     title: "Analytics",
-    url: "/dashboard/creator/analytics",
     icon: ChartLine,
   }
 ]
 
-export function DSidebar({title}) {
+export function DSidebar({ title, activeTab, onTabChange }) {
   return (
     <Sidebar>
       <SidebarContent>
@@ -45,11 +40,15 @@ export function DSidebar({title}) {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                  <SidebarMenuButton
+                    asChild
+                    className={activeTab === item.title ? "bg-gray-100" : ""}
+                    onClick={() => onTabChange(item.title)}
+                  >
+                    <button>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

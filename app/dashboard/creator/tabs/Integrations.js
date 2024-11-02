@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useCreatorData } from '../creatorDataContext'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/hooks/useUser'
 import { SkeletonCard } from '@/app/components/Skeleton'
+import { useUserContext } from '../UserContext'
 
 export default function IntegrationsPage() {
   const [integrationCode, setIntegrationCode] = useState('');
@@ -13,7 +13,8 @@ export default function IntegrationsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const data = useCreatorData();
+  // const data = useCreatorData();
+  const { creator } = useUserContext();
   const botToken = process.env.NEXT_PUBLIC_BOT_TOKEN;
 
   //Change this when is everything is tabbed
@@ -38,10 +39,10 @@ export default function IntegrationsPage() {
   };
 
   useEffect(() => {
-    if (data.telegram_group_id) {
-      fetchGroupInfo(data);
+    if (creator.telegram_group_id) {
+      fetchGroupInfo(creator);
     }
-  }, [data.telegram_group_id]);
+  }, [creator.telegram_group_id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,7 +76,7 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <>{!data.telegram_group_id ? (
+    <>{!creator.telegram_group_id ? (
       <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-4">Link Telegram Group</h2>
 
