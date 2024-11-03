@@ -80,7 +80,7 @@ export default function PayTest() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({response: response, token,  action: 'subscribe'})
+            body: JSON.stringify({ response: response, token, action: 'subscribe' })
         });
         if (res.ok) {
             const data = await res.json();
@@ -187,9 +187,9 @@ export default function PayTest() {
         const handleTokenVerification = async () => {
             if (token) {
                 try {
-                    
+
                 } catch (error) {
-                    
+
                 }
                 // Verify token and get user data
                 console.log('Verifying token...');
@@ -198,7 +198,7 @@ export default function PayTest() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({token, action: 'verify'})
+                    body: JSON.stringify({ token, action: 'verify' })
                 });
                 if (response.ok) {
                     const data = await response.json();
@@ -221,10 +221,13 @@ export default function PayTest() {
     }
 
     useEffect(() => {
-        if (userData === token && paymentPageContent === "") {
-            handleTip();
-        }
-    }, [userData, token, paymentPageContent]);
+        const initiateHandleTip = () => {
+            if (userData === token && paymentPageContent === "") {
+                handleTip();
+            }
+        };
+        initiateHandleTip();
+    }, [userData, token, paymentPageContent])
 
     // if (userData == token && paymentPageContent == "") { 
     //     handleTip()
