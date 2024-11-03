@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function LoadingSkeleton() {
+export default function LoadingSkeleton() {
   return (
     <div className="w-full">
       {/* Navigation */}
