@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/hooks/useUser'
-import { LoadingSkeleton } from '@/app/components/LoadingSkeleton'
+import LoadingSkeleton  from '@/app/components/LoadingSkeleton'
 import { useUserContext } from '../UserContext'
 import { Button } from "@/components/ui/button"
 

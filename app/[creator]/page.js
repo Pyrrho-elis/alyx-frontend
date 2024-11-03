@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import YouTubeEmbed from '../components/YoutubeEmbed'
-import { LoadingSkeleton } from '@/app/components/LoadingSkeleton'
+import LoadingSkeleton  from '@/app/components/LoadingSkeleton'
 
 export default function CreatorPage() {
   const { creator } = useParams();

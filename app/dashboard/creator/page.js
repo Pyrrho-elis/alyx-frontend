@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { useUser } from '@/app/hooks/useUser'
 import { useRouter } from 'next/navigation'
-import { LoadingSkeleton } from '@/app/components/LoadingSkeleton'
+import  LoadingSkeleton  from '@/app/components/LoadingSkeleton'
 
 export default function CreatorDashboard() {
   const { user, loading, logout } = useUser()

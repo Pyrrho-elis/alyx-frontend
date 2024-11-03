@@ -13,7 +13,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { LoadingSkeleton } from '@/app/components/LoadingSkeleton'
+import LoadingSkeleton  from '@/app/components/LoadingSkeleton'
 import {
     Avatar,
     AvatarFallback,
