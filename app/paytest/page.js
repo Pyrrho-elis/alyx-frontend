@@ -10,17 +10,9 @@ export default function PayTest() {
     const [status, setStatus] = useState(null);
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
-    // const user_id = searchParams.get('user_id');
-    // const creator_id = searchParams.get('creator_id');
-    // const first_name = searchParams.get('first_name');
-    // const { user_id, creator_id, phone_number, first_name, last_name } = useParams();
-    // const { user_id, creator_id, first_name } = router.query;
     const iframeRef = useRef(null);
     const [loading, setLoading] = useState(false);
     const [paymentPageContent, setPaymentPageContent] = useState('');
-
-
-
 
     const handleTip = async () => {
         setLoading(true);
@@ -38,19 +30,15 @@ export default function PayTest() {
                 const proxyResponse = await fetch(proxyUrl);
                 if (proxyResponse.ok) {
                     const content = await proxyResponse.text();
-                    // console.log('Received content length:', content.length);
                     setPaymentPageContent(content);
                 } else {
                     console.error('Proxy response not OK:', proxyResponse.status);
-                    // alert('Failed to load payment page.');
                 }
             } else {
                 console.error('Pay response not OK:', payResponse.status);
-                // alert('Failed to get payment link.');
             }
         } catch (error) {
             console.error('Error during payment:', error);
-            // alert('An error occurred while processing the payment.');
         } finally {
             setLoading(false);
         }
@@ -87,31 +75,14 @@ export default function PayTest() {
             setStatus(data.message);
             console.log('Data:', data);
         }
-        // console.log('Payment response:', response);
-        // if (response.status === 1) { // Assuming 1 is the success status
-        //     // Close iframe
-        //     setPaymentPageContent('');
-        //     // Store user (you'll implement this part)
-        //     // storeUser(response.user);
-        //     // Redirect to success page
-        //     handleStoreSubscriber();
-        //     alert('Success!');
-        //     router.push('/success');
-        // } else if (response.status === 0) {
-        //     // Transaction is pending
-        //     console.log('Transaction is pending. Please wait.');
-        // } else if (response.status === 2) {
-        //     // Transaction failed or other status
-        //     alert(`Payment failed: ${response.message}`);
-        // }
     };
 
+    // Effect for iframe content
     useEffect(() => {
         if (paymentPageContent && iframeRef.current) {
             const iframe = iframeRef.current;
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-            // Inject script to override fetch and XMLHttpRequest
             const script = iframeDoc.createElement('script');
             script.textContent = `
                 (function() {
@@ -122,7 +93,6 @@ export default function PayTest() {
                             const originalJson = response.json;
                             response.json = function() {
                                 return originalJson.call(this).then(data => {
-                                    // Report the response data to the parent window
                                     window.parent.postMessage({type: 'paymentResponse', data: data}, '*');
                                     return data;
                                 });
@@ -164,96 +134,70 @@ export default function PayTest() {
             `;
             iframeDoc.head.appendChild(script);
 
-            // Now write the content
             iframeDoc.open();
             iframeDoc.write(paymentPageContent);
             iframeDoc.close();
 
-            // Add event listener to intercept form submissions
-            iframe.contentWindow.addEventListener('submit', (event) => {
-                // ... (previous form submission code remains the same)
-            });
-
-            // Add event listener for messages from the iframe
-            window.addEventListener('message', (event) => {
+            const messageHandler = (event) => {
                 if (event.data.type === 'paymentResponse') {
                     handlePaymentResponse(event.data.data);
                 }
-            });
+            };
+
+            window.addEventListener('message', messageHandler);
+
+            return () => {
+                window.removeEventListener('message', messageHandler);
+            };
         }
     }, [paymentPageContent]);
 
+    // Effect for token verification
     useEffect(() => {
         const handleTokenVerification = async () => {
             if (token) {
                 try {
-
-                } catch (error) {
-
-                }
-                // Verify token and get user data
-                console.log('Verifying token...');
-                const response = await fetch(`/api/verify-payment-token?`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ token, action: 'verify' })
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.error) {
-                        setError(data.error);
+                    console.log('Verifying token...');
+                    const response = await fetch(`/api/verify-payment-token?`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ token, action: 'verify' })
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.error) {
+                            setError(data.error);
+                        } else {
+                            setUserData(token);
+                        }
                     } else {
-                        setUserData(token);
+                        setError(response.statusText);
                     }
-                } else {
-                    setError(response.statusText);
+                } catch (error) {
+                    setError(error.message);
                 }
-            }
-        }
-        handleTokenVerification();
-        // handleTip()
-    }, [token]);
-
-    if (error) {
-        return <div>Error: {error}</div>
-    }
-
-    useEffect(() => {
-        const initiateHandleTip = () => {
-            if (userData === token && paymentPageContent === "") {
-                handleTip();
             }
         };
-        initiateHandleTip();
-    }, [userData, token, paymentPageContent])
+        handleTokenVerification();
+    }, [token]);
 
-    // if (userData == token && paymentPageContent == "") { 
-    //     handleTip()
-    // }
+    // Effect for initiating tip
+    useEffect(() => {
+        if (userData === token && paymentPageContent === "") {
+            handleTip();
+        }
+    }, [userData, token, paymentPageContent]);
 
-    // if (userData == "loading") {
-    //     return <div>Loading...</div>
-    // } else {
-    //     handleTip()
-    // }
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
 
     return (
         <div className='w-full h-full'>
-            {/* <h1>Tip Pyrrho</h1>
-            <div>
-                Subscriber Info
-                {userData && <p>User ID: {userData}</p>}
-                {status && <p>Status: {status}</p>}
-            </div>
-            <button onClick={handleTip} disabled={loading}>
-                {loading ? 'Processing...' : 'Give Tip'}
-            </button> */}
-
             {paymentPageContent && (
                 <div className='w-full h-screen'>
-                    {/* <h2>Payment Page:</h2> */}
                     <iframe
                         ref={iframeRef}
                         style={{ width: '100%', height: '100%', border: '1px solid #ccc' }}
