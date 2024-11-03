@@ -81,7 +81,7 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <>{creator.telegram_group_id ? (
+    <>{!creator.telegram_group_id ? (
       <div className="max-w-md mx-auto mt-4 p-6 bg-gray-50 rounded-lg shadow-lg border-2">
         <h2 className="text-2xl font-bold mb-4">Link Telegram Group</h2>
 
