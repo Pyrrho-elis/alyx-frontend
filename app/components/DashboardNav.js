@@ -74,7 +74,7 @@ function Navbar({ user, logout }) {
                             </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button>Share</Button>
+                                    <Button variant="shine">Share</Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="">
                                     <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
@@ -93,7 +93,7 @@ function Navbar({ user, logout }) {
                         </>
                     ) : (
                         <div className="ml-auto hidden md:flex md:items-center">
-                            <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
+                            <Button className="shadow-sm" variant="ringHover" onClick={handlePublishClick}>
                                 Publish
                             </Button>
                         </div>
@@ -110,7 +110,7 @@ function Navbar({ user, logout }) {
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button>Share</Button>
+                                        <Button variant="shine">Share</Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="">
                                         <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
@@ -129,7 +129,7 @@ function Navbar({ user, logout }) {
                             </>
                         ) : (
                             <>
-                                <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
+                                <Button className="shadow-sm" variant="ringHover" onClick={handlePublishClick}>
                                     Publish
                                 </Button>
                             </>

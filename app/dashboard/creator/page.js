@@ -2,14 +2,14 @@
 import React, { useState } from 'react'
 import { useUser } from '@/app/hooks/useUser'
 import { useRouter } from 'next/navigation'
-import { SkeletonCard } from '@/app/components/Skeleton'
+import { LoadingSkeleton } from '@/app/components/LoadingSkeleton'
 
 export default function CreatorDashboard() {
   const { user, loading, logout } = useUser()
   const router = useRouter()
 
   if (loading) {
-    return <div className='flex flex-col justify-center'><SkeletonCard /></div>
+    return <div className='flex flex-col justify-center'><LoadingSkeleton /></div>
   }
 
   if (!user) {

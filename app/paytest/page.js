@@ -220,6 +220,16 @@ export default function PayTest() {
         return <div>Error: {error}</div>
     }
 
+    useEffect(() => {
+        if (userData === token && paymentPageContent === "") {
+            handleTip();
+        }
+    }, [userData, token, paymentPageContent]);
+
+    // if (userData == token && paymentPageContent == "") { 
+    //     handleTip()
+    // }
+
     // if (userData == "loading") {
     //     return <div>Loading...</div>
     // } else {
@@ -228,7 +238,7 @@ export default function PayTest() {
 
     return (
         <div className='w-full h-full'>
-            <h1>Tip Pyrrho</h1>
+            {/* <h1>Tip Pyrrho</h1>
             <div>
                 Subscriber Info
                 {userData && <p>User ID: {userData}</p>}
@@ -236,7 +246,7 @@ export default function PayTest() {
             </div>
             <button onClick={handleTip} disabled={loading}>
                 {loading ? 'Processing...' : 'Give Tip'}
-            </button>
+            </button> */}
 
             {paymentPageContent && (
                 <div className='w-full h-screen'>

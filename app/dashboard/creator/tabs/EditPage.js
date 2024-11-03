@@ -13,7 +13,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { SkeletonCard } from '@/app/components/Skeleton'
+import { LoadingSkeleton } from '@/app/components/LoadingSkeleton'
 import {
     Avatar,
     AvatarFallback,
@@ -141,7 +141,7 @@ export default function EditPage() {
         <div className='flex justify-around w-full items-center'>
             <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
                 <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
-                {loading ? <div className='flex flex-col justify-center'><SkeletonCard /></div> : (
+                {loading ? <div className='flex flex-col justify-center'><LoadingSkeleton /></div> : (
                     <form onSubmit={handleSubmit} className='space-y-4 w-full max-w-md'>
                         <AvatarUpload avatarUrl={avatarUrl} userId={id} />
                         {error && <p className='text-red-500'>{error}</p>}
@@ -186,6 +186,7 @@ export default function EditPage() {
                                 rows={5}
                                 placeholder="Tier Price"
                                 value={tiers.price}
+                                type="number"
                                 onChange={(e) => handleTierChange('price', e.target.value)}
                                 className='w-full p-2 border rounded'
                             />
@@ -194,7 +195,7 @@ export default function EditPage() {
                             Features and Perks
                         </label>
                         {perks.map((tier, index) => (
-                            <div name='perks' key={index} className='flex flex-col space-x-2 items-center'>
+                            <div name='perks' key={index} className='flex flex-col space-x-2 justify-center items-center'>
                                 <Card className="w-full px-4">
                                     <CardHeader>
                                         <CardTitle>
@@ -255,54 +256,56 @@ export default function EditPage() {
                     </form>
                 )}
             </div>
-            <div className='hidden lg:block w-full max-w-[390px]'>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex flex-col justify-center items-center gap-4">
-                            <Avatar className="w-32 h-32">
-                                <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
-                                <AvatarFallback>Avatar</AvatarFallback>
-                            </Avatar>
-                            <div className='flex flex-col items-center'>
-                                <p className="text-4xl font-semibold mb-2 text-blue-500">{title}</p>
-                                <p className='text-sm text-gray-500'>{description}</p>
-                            </div>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-4">
-                        <div className="grid grid-cols-2">
-                            <Card className="px-2 border-solid border-2 border-sky-500 ">
-                                <CardHeader>
-                                    <CardTitle>
-                                        <span className="text-lg font-semibold text-blue-500">{tiers.name}</span>
-                                    </CardTitle>
-                                    <CardDescription>
-                                        <span className="text-gray-600 font-bold">Br {tiers.price} /month</span>
-                                    </CardDescription>
-                                </CardHeader>
-                            </Card>
-                        </div>
-                        <span className='text-xl'>Inside the community:</span>
-                        {perks.map((perk, index) => (
-                            <div key={index}>
-                                <Card className="w-full p-4 mb-2">
-                                    <CardTitle>
-                                        <span className="text-lg font-semibold mb-2 text-blue-500">{perk.name}</span>
-                                    </CardTitle>
-                                    <CardDescription>
-                                        <span className="text-gray-600 font-bold">{perk.desc}</span>
-                                    </CardDescription>
+            <div className='hidden lg:block  w-full max-w-[390px]'>
+                <div className="flex justify-center">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex flex-col justify-center items-center gap-4">
+                                <Avatar className="w-32 h-32">
+                                    <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
+                                    <AvatarFallback>Avatar</AvatarFallback>
+                                </Avatar>
+                                <div className='flex flex-col justify-center items-center'>
+                                    <p className="text-4xl font-bold mb-2 text-blue-500">{title}</p>
+                                    <p className='text-sm text-gray-500'>{description}</p>
+                                </div>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-4 justify-center">
+                            <div className="grid grid-cols-2">
+                                <Card className="px-2 border-solid border-2 border-sky-500 ">
+                                    <CardHeader>
+                                        <CardTitle>
+                                            <span className="text-lg font-semibold text-blue-500">{tiers.name}</span>
+                                        </CardTitle>
+                                        <CardDescription>
+                                            <span className="text-gray-600 font-bold">Br {tiers.price} /month</span>
+                                        </CardDescription>
+                                    </CardHeader>
                                 </Card>
                             </div>
-                        ))}
-                        {youtubeUrl && youtubeUrl.length > 0
-                            ? <div className="rounded-sm">
-                                <YoutubeEmbed videoId={youtubeUrl} />
-                            </div>
-                            : <></>
-                        }
-                    </CardContent>
-                </Card>
+                            <span className='text-xl'>Inside the community:</span>
+                            {perks.map((perk, index) => (
+                                <div key={index}>
+                                    <Card className="w-full p-4 mb-2 justify-center">
+                                        <CardTitle>
+                                            <span className="text-lg font-semibold mb-2 text-blue-500">{perk.name}</span>
+                                        </CardTitle>
+                                        <CardDescription>
+                                            <span className="text-gray-600 font-bold">{perk.desc}</span>
+                                        </CardDescription>
+                                    </Card>
+                                </div>
+                            ))}
+                            {youtubeUrl && youtubeUrl.length > 0
+                                ? <div className="rounded-sm">
+                                    <YoutubeEmbed videoId={youtubeUrl} />
+                                </div>
+                                : <></>
+                            }
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     )

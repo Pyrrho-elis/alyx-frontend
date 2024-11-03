@@ -11,6 +11,7 @@ import EditPage from "./tabs/EditPage";
 import Integrations from "./tabs/Integrations";
 import Members from "./tabs/Members";
 import Analytics from "./tabs/Analytics";
+import LoadingSkeleton from "@/app/components/LoadingSkeleton";
 
 const TAB_COMPONENTS = {
     "Edit Page": EditPage,
@@ -32,7 +33,7 @@ function InnerLayout() {
     const [activeTab, setActiveTab] = useState("Edit Page");
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div className="w-full"><LoadingSkeleton /></div>;
     }
 
     const ActiveComponent = TAB_COMPONENTS[activeTab];
@@ -43,7 +44,7 @@ function InnerLayout() {
             <main className="w-full">
                 <DashboardNav user={user} logout={logout} />
                 <SidebarTrigger className="hidden md:block fixed bg-gray-100 border-r-2 border-b-2 border-t-2 mt-2 rounded-r-lg rounded-l-none text-2xl" />
-                <Suspense fallback={<div>Loading...</div>}>
+                <Suspense fallback={<div><LoadingSkeleton /></div>}>
                     <ActiveComponent />
                 </Suspense>
             </main>

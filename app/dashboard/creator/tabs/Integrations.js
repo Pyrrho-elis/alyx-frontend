@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/hooks/useUser'
-import { SkeletonCard } from '@/app/components/Skeleton'
+import { LoadingSkeleton } from '@/app/components/LoadingSkeleton'
 import { useUserContext } from '../UserContext'
+import { Button } from "@/components/ui/button"
 
 export default function IntegrationsPage() {
   const [integrationCode, setIntegrationCode] = useState('');
@@ -37,6 +38,10 @@ export default function IntegrationsPage() {
       setLoading(false);
     }
   };
+
+  const handleAddBot = async () => {
+    window.location.href = "https://t.me/subzzSupportBot?start=setup_"
+  }
 
   useEffect(() => {
     if (creator.telegram_group_id) {
@@ -72,12 +77,12 @@ export default function IntegrationsPage() {
   };
 
   if (loading) {
-    <SkeletonCard />
+    <LoadingSkeleton />
   }
 
   return (
-    <>{!creator.telegram_group_id ? (
-      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <>{creator.telegram_group_id ? (
+      <div className="max-w-md mx-auto mt-4 p-6 bg-gray-50 rounded-lg shadow-lg border-2">
         <h2 className="text-2xl font-bold mb-4">Link Telegram Group</h2>
 
         <form onSubmit={handleSubmit}>
@@ -110,14 +115,20 @@ export default function IntegrationsPage() {
           </button>
         </form>
 
-        <div className="mt-4 text-sm text-gray-600">
-          <p>To get an integration code:</p>
+        <div className="mt-4 text-sm text-gray-600 flex flex-col gap-3 items-center">
+          <p className='text-2xl font-bold'>To get an integration code:</p>
           <ol className="list-decimal ml-5 mt-2">
-            <li>Add @YourBot to your Telegram group</li>
+            <li>Add Subzz Bot to your Telegram group by clicking the button below</li>
             <li>Make the bot an administrator</li>
             <li>Copy the integration code sent by the bot</li>
             <li>Paste it here to complete the linking</li>
           </ol>
+          <div>
+            <Button variant="shine" onClick={handleAddBot}>
+              Add Subzz Bot to your Telegram group
+            </Button>
+          </div>
+          <p>Need Help? Book a demo with our support team</p>
         </div>
       </div>
     ) : (<>
