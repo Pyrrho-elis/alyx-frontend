@@ -64,7 +64,7 @@ function Navbar({ user, logout }) {
 
     return (
         <nav className="sticky w-full top-0 z-50 bg-gray-300">
-            <div className="relative lg:m-0 flex h-[65px] max-w-full items-center px-8 sm:px-2 md:px-2 lg:px-8 bg-white border-b border-gray-300">
+            <div className="relative lg:m-0 flex h-[65px] min-w-full items-center sm:px-2 md:px-2 lg:px-8 bg-white border-b border-gray-300">
                 <div className="bg-gray-300" />
                 <div className="flex w-full px-4 space-x-4 md:hidden">
                     {isActive ? (
