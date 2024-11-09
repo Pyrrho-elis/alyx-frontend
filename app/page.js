@@ -1,10 +1,15 @@
+"use client"
 import { Button } from "@/components/ui/button"
 import Navbar from "./components/Nav"
 import Link from "next/link"
 import { ArrowBigRightDash, Star } from "lucide-react"
 import FadeUp from "./components/FadeUp"
+import { useIsVisible }  from "./hooks/useIsVisible.js"
+import { useEffect, useRef } from "react"
 
 export default function LandingPage() {
+  const sectionRef1 = useRef(null);
+  const isVisble = useIsVisible(sectionRef1);
   return (
     <div className="scroll-smooth flex flex-col justify-center min-h-screen py-4 px-4 m-auto overflow-x-hidden">
       {/* <Navbar  /> */}
@@ -40,7 +45,7 @@ export default function LandingPage() {
       </section>
 
       {/* Add more sections here */}
-      <section id="features" className="px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden">
+      <section ref={sectionRef1} id="features" className={`px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden ${isVisble ? "motion-preset-slide-right" : "invisible"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Features</h2>

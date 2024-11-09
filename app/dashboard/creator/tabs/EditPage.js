@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/avatar"
 import YoutubeEmbed from '@/app/components/YoutubeEmbed'
 import useProfileStore from '../useProfileStore'
+import { Label } from '@radix-ui/react-dropdown-menu'
 
 
 export default function EditPage() {
@@ -53,7 +54,9 @@ export default function EditPage() {
         if (user) {
             const creatorUsername = user.user_metadata.username;
             setUsername(creatorUsername);
-            fetchCreatorData(user.user_metadata.username);
+            if (id == '') {
+                fetchCreatorData(user.user_metadata.username);
+            }
             fetchAvatarUrl();
         }
     }, [user]);
@@ -150,15 +153,21 @@ export default function EditPage() {
                                 <Card className="w-full px-4">
                                     <CardHeader>
                                         <CardTitle>
+                                            <Label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
+                                                Perk Title
+                                            </Label>
                                             <Input
                                                 type="text"
                                                 placeholder={`Perk Title`}
                                                 value={perk.name}
                                                 onChange={(e) => handlePerkChange(index, 'name', e.target.value)}
-                                                className='w-1/2 p-2 border rounded'
+                                                className='w-full p-2 border rounded'
                                             />
                                         </CardTitle>
                                         <CardDescription>
+                                            <Label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
+                                                Perk Description
+                                            </Label>
                                             <Input
                                                 type="text"
                                                 placeholder={`Perk Description`}
@@ -207,9 +216,9 @@ export default function EditPage() {
                     </form>
                 )}
             </div>
-            <div className='hidden lg:block sticky right-0 w-full max-w-[390px]'>
-                <div className="flex justify-center">
-                    <Card>
+            <div className='hidden lg:block w-full max-w-[390px] overflow-scroll'>
+                <div className="flex flex-col sticky top-16 overflow-scroll">
+                    <Card className="overflow-scroll">
                         <CardHeader>
                             <CardTitle className="flex flex-col justify-center items-center gap-4">
                                 <Avatar className="w-32 h-32">

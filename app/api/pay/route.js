@@ -1,9 +1,32 @@
 // app/api/pay/route.js
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 
 export async function POST(request) {
     const url = 'https://ye-buna.com/Pyrrho';
+    const { token } = await request.json();
+    const origin = request.headers.get('origin');
+    const creatorData = await getCreatorData(token, origin);
+    const amount = JSON.parse(creatorData.tiers)[0].price
+    console.log('Amount:', amount);
+    // try {
+    //     const userData = jwt.verify(token, process.env.NEXT_PUBLIC_JWT_SECRET);
+    //     console.log('User data:', userData);
+    //     if (!userData.user_id) {
+    //         return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    //     }
+    //     const response = await fetch(`${req.headers.get('origin')}/api/creator/${userData.creator_id}`);
+    //     if (!response.ok) {
+    //         return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    //     }
+    //     const creatorData = await response.json();
+    //     const amount = creatorData.tiers[0].price;
+
+    // } catch (error) {
+    //     console.error('Error verifying token:', error);
+    //     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    // }
 
     // Hardcoded headers
     const headers = {
@@ -16,7 +39,7 @@ export async function POST(request) {
     };
 
     const body = new URLSearchParams({
-        amount: '1',
+        amount: amount,
         subaccount_id: '6cdb6d07-eac7-4652-925b-00c78e4a94a0',
         user_id: '8957',
         supported: '',
@@ -29,10 +52,10 @@ export async function POST(request) {
     try {
         // Send the POST request to the external URL
         const response = await axios.post(url, body.toString(), { headers });
-        
+
         // Check if the response contains the redirect script
         const redirectMatch = response.data.match(/window\.location\.href='(.*?)'/);
-        
+
         if (redirectMatch) {
             // Extract the redirect URL
             const redirectUrl = redirectMatch[1];
@@ -42,5 +65,25 @@ export async function POST(request) {
         }
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+const getCreatorData = async (token, origin) => {
+    try {
+        const userData = jwt.verify(token, process.env.NEXT_PUBLIC_JWT_SECRET);
+        console.log('User data:', userData);
+        if (!userData.user_id) {
+            return "Invalid token";
+        }
+        const response = await fetch(`${origin}/api/creator/${userData.creator_id}`);
+        if (!response.ok) {
+            return "Invalid token";
+        }
+        const creatorData = await response.json();
+        return creatorData;
+
+    } catch (error) {
+        console.error('Error verifying token:', error);
+        return "Invalid token";
     }
 }

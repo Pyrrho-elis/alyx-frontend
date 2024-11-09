@@ -20,6 +20,7 @@ export default function PayTest() {
         try {
             const payResponse = await fetch('/api/pay', {
                 method: 'POST',
+                body: JSON.stringify({ token })
             });
 
             if (payResponse.ok) {
@@ -35,7 +36,7 @@ export default function PayTest() {
                     console.error('Proxy response not OK:', proxyResponse.status);
                 }
             } else {
-                console.error('Pay response not OK:', payResponse.status);
+                console.error('Pay response not OK:', payResponse.message);
             }
         } catch (error) {
             console.error('Error during payment:', error);

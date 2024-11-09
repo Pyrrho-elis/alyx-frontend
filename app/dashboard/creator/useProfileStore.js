@@ -27,12 +27,10 @@ const useProfileStore = create((set, get) => ({
         set({ loading: true });
         try {
             const response = await fetch(`/api/creator/${username}`);
-            console.log(response);
             if (!response.ok) {
                 throw new Error('Failed to fetch creator');
             }
             const data = await response.json();
-            console.log(data);
 
             const parsedTiers = data.tiers ? Array(JSON.parse(data.tiers)) : [{ name: '', price: '' }];
             set({

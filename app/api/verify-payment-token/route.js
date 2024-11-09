@@ -11,7 +11,7 @@ export async function POST(req, res) {
         case 'verify':
             try {
                 const userData = jwt.verify(token, process.env.NEXT_PUBLIC_JWT_SECRET);
-                return NextResponse.json({ message: 'Token verified successfully' }, { status: 200 });
+                return NextResponse.json({ message: 'Token verified successfully', data: userData }, { status: 200 });
             } catch (error) {
                 return NextResponse.json({ error: error.message }, { status: 400 });
             }

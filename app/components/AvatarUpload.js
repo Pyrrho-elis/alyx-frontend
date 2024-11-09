@@ -62,7 +62,7 @@ export default function AvatarUpload({ userId, avatarUrl }) {
                 </Avatar>
             )}
             <div className=''>
-                <label className="button primary block" htmlFor="single">
+                <label className="button primary block text-white bg-gray-900 cursor-pointer p-2 rounded-md" htmlFor="single">
                     {uploading ? 'Uploading ...' : 'Upload New'}
                 </label>
                 <input
