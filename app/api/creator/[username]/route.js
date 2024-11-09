@@ -6,6 +6,7 @@ export async function GET(req, { params }) {
   const { username } = params;
   const cookieStore = cookies()
   const supabase = createClient(cookieStore)
+  console.log(username);
 
   try {
     const { data: creator, error } = await supabase

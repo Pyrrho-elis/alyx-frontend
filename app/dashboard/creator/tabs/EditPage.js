@@ -13,58 +13,50 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import LoadingSkeleton  from '@/app/components/LoadingSkeleton'
+import LoadingSkeleton from '@/app/components/LoadingSkeleton'
 import {
     Avatar,
     AvatarFallback,
     AvatarImage,
 } from "@/components/ui/avatar"
 import YoutubeEmbed from '@/app/components/YoutubeEmbed'
+import useProfileStore from '../useProfileStore'
 
 
 export default function EditPage() {
     const { user } = useUser()
-    const router = useRouter()
-    const [title, setTitle] = useState('')
-    const [tiers, setTiers] = useState([{ name: '', price: '' }])
-    const [description, setDescription] = useState('')
-    const [perks, setPerks] = useState([{ name: '', desc: '' }])
-    const [youtubeUrl, setYoutubeUrl] = useState('');
-    const [id, setId] = useState('')
-    const [avatarUrl, setAvatarUrl] = useState(null);
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-    const [success, setSuccess] = useState(false)
-    const [creatorData, setCreatorData] = useState(null);
+    const [username, setUsername] = useState('');
+    const {
+        title,
+        setTitle,
+        tiers,
+        description,
+        setDescription,
+        perks,
+        youtubeUrl,
+        setYoutubeUrl,
+        id,
+        avatarUrl,
+        loading,
+        error,
+        success,
+        fetchCreatorData,
+        fetchAvatarUrl,
+        handleTierChange,
+        handlePerkChange,
+        addPerk,
+        removePerk,
+        handleSubmit,
+    } = useProfileStore();
 
     useEffect(() => {
         if (user) {
-            setId(user.id)
+            const creatorUsername = user.user_metadata.username;
+            setUsername(creatorUsername);
+            fetchCreatorData(user.user_metadata.username);
             fetchAvatarUrl();
-            const fetchCreatorData = async () => {
-                try {
-                    const response = await fetch(`/api/creator/${user.user_metadata.username}`);
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch creator data');
-                    }
-                    const data = await response.json();
-                    setCreatorData(data);
-                    console.log('creatorData', data);
-                    setTitle(data.title || '');
-                    setTiers(JSON.parse(data.tiers) || [{ name: '', price: '' }]);
-                    setDescription(data.desc || '');
-                    setPerks(JSON.parse(data.perks) || [{ name: '', desc: '' }]);
-                    setYoutubeUrl(data.youtube_video_id ? `https://www.youtube.com/watch?v=${data.youtube_video_id}` : '');
-                } catch (error) {
-                    console.error('Error fetching creator data:', error);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            fetchCreatorData();
         }
-    }, [user])
+    }, [user]);
 
     function extractYoutubeId(url) {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -72,77 +64,17 @@ export default function EditPage() {
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    const fetchAvatarUrl = async () => {
-        const res = await fetch('/api/avatar');
-        const data = await res.json();
-        setAvatarUrl(data.avatarUrl);
-    };
-
-    const handleTierChange = (field, value) => {
-        setTiers({ ...tiers, [field]: value });
-    }
-
-    const handlePerkChange = (index, field, value) => {
-        const newPerks = [...perks]
-        newPerks[index][field] = value
-        setPerks(newPerks)
-    }
-
-    const addPerk = () => {
-        setPerks([...perks, { name: '', desc: '' }])
-    }
-
-    const removePerk = (index) => {
-        const newPerks = perks.filter((_, i) => i !== index)
-        setPerks(newPerks)
-    }
-
-    const handleSubmit = async (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
-
-        if (!user.user_metadata.username) {
-            console.error('Username is not available');
-            return;
-        }
-
-        const youtubeId = extractYoutubeId(youtubeUrl);
-
-        try {
-            const response = await fetch(`/api/creator/${user.user_metadata.username}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title,
-                    tiers: JSON.stringify(tiers),
-                    desc: description,
-                    perks: JSON.stringify(perks),
-                    youtube_video_id: youtubeId,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update creator data');
-            }
-
-            const result = await response.json();
-            //console.log('Update successful:', result);
-            setSuccess(true)
-            router.refresh();
-        } catch (error) {
-            console.error('Error updating creator data:', error);
-            setError(error.message)
-            // You might want to set an error state here and display it to the user
-        }
+        handleSubmit(username);
     }
 
     return (
         <div className='flex justify-around w-full items-center'>
             <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
                 <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
-                {loading ? <div className='flex flex-col justify-center'><LoadingSkeleton /></div> : (
-                    <form onSubmit={handleSubmit} className='space-y-4 w-full max-w-md'>
+                {loading ? <div className='space-y-4 w-full max-w-md'><LoadingSkeleton /></div> : (
+                    <form onSubmit={handleSave} className='space-y-4 w-full max-w-md'>
                         <AvatarUpload avatarUrl={avatarUrl} userId={id} />
                         {error && <p className='text-red-500'>{error}</p>}
                         {success && <p className='text-green-500'>Your page has been updated successfully!</p>}
@@ -173,7 +105,26 @@ export default function EditPage() {
                         </label>
                         <div className='flex space-x-2 items-center'>
 
-                            <Input
+                            {tiers.map((tier, index) => (
+                                <div key={index} className='flex space-x-2 items-center'>
+                                    <Input
+                                        name='tierName'
+                                        placeholder="Tier Name"
+                                        value={tier.name}
+                                        onChange={(e) => handleTierChange(index, 'name', e.target.value)} // Pass index here
+                                        className='w-full p-2 border rounded'
+                                    />
+                                    <Input
+                                        name='tierPrice'
+                                        placeholder="Tier Price"
+                                        value={tier.price}
+                                        type="number"
+                                        onChange={(e) => handleTierChange(index, 'price', e.target.value)} // Pass index here
+                                        className='w-full p-2 border rounded'
+                                    />
+                                </div>
+                            ))}
+                            {/* <Input
                                 name='tiers'
                                 rows={5}
                                 placeholder="Tier Name"
@@ -189,12 +140,12 @@ export default function EditPage() {
                                 type="number"
                                 onChange={(e) => handleTierChange('price', e.target.value)}
                                 className='w-full p-2 border rounded'
-                            />
+                            /> */}
                         </div>
                         <label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
                             Features and Perks
                         </label>
-                        {perks.map((tier, index) => (
+                        {perks.map((perk, index) => (
                             <div name='perks' key={index} className='flex flex-col space-x-2 justify-center items-center'>
                                 <Card className="w-full px-4">
                                     <CardHeader>
@@ -202,7 +153,7 @@ export default function EditPage() {
                                             <Input
                                                 type="text"
                                                 placeholder={`Perk Title`}
-                                                value={tier.name}
+                                                value={perk.name}
                                                 onChange={(e) => handlePerkChange(index, 'name', e.target.value)}
                                                 className='w-1/2 p-2 border rounded'
                                             />
@@ -211,7 +162,7 @@ export default function EditPage() {
                                             <Input
                                                 type="text"
                                                 placeholder={`Perk Description`}
-                                                value={tier.desc}
+                                                value={perk.desc}
                                                 onChange={(e) => handlePerkChange(index, 'desc', e.target.value)}
                                                 className='w-full p-2 border rounded'
                                             />
@@ -256,7 +207,7 @@ export default function EditPage() {
                     </form>
                 )}
             </div>
-            <div className='hidden lg:block  w-full max-w-[390px]'>
+            <div className='hidden lg:block sticky right-0 w-full max-w-[390px]'>
                 <div className="flex justify-center">
                     <Card>
                         <CardHeader>
@@ -273,16 +224,25 @@ export default function EditPage() {
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 justify-center">
                             <div className="grid grid-cols-2">
-                                <Card className="px-2 border-solid border-2 border-sky-500 ">
-                                    <CardHeader>
-                                        <CardTitle>
-                                            <span className="text-lg font-semibold text-blue-500">{tiers.name}</span>
-                                        </CardTitle>
-                                        <CardDescription>
-                                            <span className="text-gray-600 font-bold">Br {tiers.price} /month</span>
-                                        </CardDescription>
-                                    </CardHeader>
-                                </Card>
+                                {Array.isArray(tiers) && tiers.length > 0 ? (
+                                    tiers.map((tier, index) => (
+                                        <Card key={index} className="px-2 border-solid border-2 border-sky-500 ">
+                                            <CardHeader>
+                                                <CardTitle>
+                                                    <span className="text-lg font-semibold text-blue-500">{tier.name}</span>
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    <span className="text-gray-600 font-bold">Br {tier.price} /month</span>
+                                                </CardDescription>
+                                            </CardHeader>
+                                        </Card>
+                                    ))
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center">
+                                        <p className="text-gray-500 text-center">No tiers added yet</p>
+                                    </div>
+                                )
+                                }
                             </div>
                             <span className='text-xl'>Inside the community:</span>
                             {perks.map((perk, index) => (

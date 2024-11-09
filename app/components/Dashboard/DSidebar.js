@@ -35,14 +35,15 @@ export function DSidebar({ title, activeTab, onTabChange }) {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{title}</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-2xl font-medium text-gray-900">
+            {title}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    className={activeTab === item.title ? "bg-gray-100" : ""}
+                    className={activeTab === item.title ? "bg-gray-300" : ""}
                     onClick={() => onTabChange(item.title)}
                   >
                     <button>

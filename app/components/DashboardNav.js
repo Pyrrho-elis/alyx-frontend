@@ -2,63 +2,29 @@
 
 import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { useUser } from '@/app/hooks/useUser'
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
+import usePublishStore from "../dashboard/creator/usePublishStore"
 
 function Navbar({ user, logout }) {
     const [isOpen, setIsOpen] = useState(false)
     const [isCopied, setIsCopied] = useState(false)
     const [email, setEmail] = useState('')
-    const [isActive, setIsActive] = useState(false)
-    const [loading, setLoading] = useState(true)
     const [username, setUsername] = useState('')
 
-    const handlePublishClick = async () => {
-        try {
-            const response = await fetch(`/api/creator/${username}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    isActive: !isActive,
-                }),
-            }
-            );
-            if (!response.ok) {
-                throw new Error('Failed to update creator data');
-            }
-            const data = await response.json();
-            console.log('Update successful:', data);
-            fetchCreatorData();
-        } catch (error) {
-            console.error('Error updating creator data:', error);
-        }
-    }
+    const { isActive, fetchCreatorData, loading, togglePublish } = usePublishStore()
 
-    const fetchCreatorData = async () => {
-        try {
-            const response = await fetch(`/api/creator/${user.user_metadata.username}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch creator data');
-            }
-            const data = await response.json();
-            setIsActive(data.isActive);
-        } catch (error) {
-            console.error('Error fetching creator data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const handlePublishClick = async () => {
+        togglePublish(username)
+    }
 
     useEffect(() => {
         if (user) {
             setEmail(user.email)
             setUsername(user.user_metadata.username)
-            fetchCreatorData();
+            fetchCreatorData(username);
         }
     }, [user])
 
@@ -105,31 +71,31 @@ function Navbar({ user, logout }) {
                     <div className="flex space-x-4">
                         {isActive ? (
                             <>
-                                <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
+                                <Button className="shadow-sm" variant="outline" onClick={handlePublishClick} disabled={loading}> 
                                     Unpublish
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="shine">Share</Button>
+                                        <Button variant="shine" disabled={loading}>Share</Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="">
                                         <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
                                         <div className="flex gap-4 p-4">
-                                            <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${username}`} />
+                                            <Input   className="font-bold text-base" disabled value={`subzz.vercel.app/${username}`} />
                                             <Button onClick={() => {
                                                 navigator.clipboard.writeText(`subzz.vercel.app/${username}`)
                                                 setIsCopied(true)
                                                 setTimeout(() => {
                                                     setIsCopied(false)
                                                 }, 2000)
-                                            }}>{isCopied ? 'Copied' : 'Copy'}</Button>
+                                            } } disabled={loading}>{isCopied ? 'Copied' : 'Copy'}</Button>
                                         </div>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </>
                         ) : (
                             <>
-                                <Button className="shadow-sm" variant="ringHover" onClick={handlePublishClick}>
+                                <Button className="shadow-sm" variant="ringHover" onClick={handlePublishClick} disabled={loading}>
                                     Publish
                                 </Button>
                             </>
