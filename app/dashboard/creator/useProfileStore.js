@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 const useProfileStore = create((set, get) => ({
     title: '',
-    tiers: [{ name: '', price: '' }],
+    tiers: { "0": { name: '', price: '' } },
     description: '',
     perks: [{ name: '', desc: '' }],
     youtubeUrl: '',
@@ -32,7 +32,7 @@ const useProfileStore = create((set, get) => ({
             }
             const data = await response.json();
 
-            const parsedTiers = data.tiers ? Array(JSON.parse(data.tiers)) : [{ name: '', price: '' }];
+            const parsedTiers = data.tiers && Object.keys(data.tiers).length > 0 ? JSON.parse(data.tiers) : { "0": { name: '', price: '' } };
             set({
                 creatorData: data,
                 title: data.title || '',
@@ -59,25 +59,35 @@ const useProfileStore = create((set, get) => ({
         }
     },
 
-    handleTierChange: (index, field, value) => {
+    handleTierChange: (key, field, value) => {
         const currentTiers = get().tiers;
 
-        // Ensure currentTiers is an array
-        if (!Array.isArray(currentTiers)) {
-            console.error("Tiers is not an array, resetting to default.");
-            set({ tiers: [{ name: '', price: '' }] });
-            return;
+        // Update the specific tier while maintaining the overall structure
+        if (currentTiers[key]) {
+            set({
+                tiers: {
+                    ...currentTiers,
+                    [key]: {
+                        ...currentTiers[key],
+                        [field]: value, // Update the specific field of the tier
+                    },
+                },
+            });
         }
+        // // Ensure currentTiers is an object
+        // if (typeof currentTiers !== 'object') {
+        //     console.error("Tiers is not an object, resetting to default.");
+        //     set({ tiers: {} });
+        //     return;
+        // }
 
-        const tiers = currentTiers.map((tier, i) => 
-            i === index ? { ...tier, [field]: value } : tier
-        );
-        set({ tiers });
-        console.log('Tiers', tiers);
+        // const updatedTier = { ...currentTiers[key], [field]: value };
+        // set({ tiers: { ...currentTiers, [key]: updatedTier } }); // Update specific tier
+        // console.log('Tiers', get().tiers);
     },
 
     handlePerkChange: (index, field, value) => {
-        const perks = get().perks.map((perk, i) => 
+        const perks = get().perks.map((perk, i) =>
             i === index ? { ...perk, [field]: value } : perk
         );
         set({ perks });
@@ -115,7 +125,8 @@ const useProfileStore = create((set, get) => ({
                 throw new Error('Failed to update creator data');
             }
 
-            await response.json();
+            const updatedCreatorData = await response.json();
+            set({ creatorData: updatedCreatorData });
             // set({ success: true });
             get().setSuccessWithTimeout(true);
         } catch (error) {

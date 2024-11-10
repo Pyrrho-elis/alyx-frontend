@@ -107,43 +107,27 @@ export default function EditPage() {
                             Tier
                         </label>
                         <div className='flex space-x-2 items-center'>
-
-                            {tiers.map((tier, index) => (
-                                <div key={index} className='flex space-x-2 items-center'>
+                            {Object.keys(tiers).map((key) => (
+                                <div key={key} className='flex space-x-2 items-center'>
                                     <Input
-                                        name='tierName'
+                                        name={`tierName-${key}`}
                                         placeholder="Tier Name"
-                                        value={tier.name}
-                                        onChange={(e) => handleTierChange(index, 'name', e.target.value)} // Pass index here
+                                        value={tiers[key].name}
+                                        onChange={(e) => handleTierChange(key, 'name', e.target.value)}
                                         className='w-full p-2 border rounded'
                                     />
                                     <Input
-                                        name='tierPrice'
+                                        name={`tierPrice-${key}`}
                                         placeholder="Tier Price"
-                                        value={tier.price}
+                                        value={tiers[key].price}
                                         type="number"
-                                        onChange={(e) => handleTierChange(index, 'price', e.target.value)} // Pass index here
+                                        onChange={(e) => handleTierChange(key, 'price', e.target.value)}
                                         className='w-full p-2 border rounded'
                                     />
+                                    {/* // Todo: Add delete button */}
+                                    {/* <Button type="button" onClick={() => removeTier(key)}>Delete</Button> */}
                                 </div>
                             ))}
-                            {/* <Input
-                                name='tiers'
-                                rows={5}
-                                placeholder="Tier Name"
-                                value={tiers.name}
-                                onChange={(e) => handleTierChange('name', e.target.value)}
-                                className='w-full p-2 border rounded'
-                            />
-                            <Input
-                                name='tiers'
-                                rows={5}
-                                placeholder="Tier Price"
-                                value={tiers.price}
-                                type="number"
-                                onChange={(e) => handleTierChange('price', e.target.value)}
-                                className='w-full p-2 border rounded'
-                            /> */}
                         </div>
                         <label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
                             Features and Perks
@@ -233,24 +217,18 @@ export default function EditPage() {
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 justify-center">
                             <div className="grid grid-cols-2">
-                                {Array.isArray(tiers) && tiers.length > 0 ? (
-                                    tiers.map((tier, index) => (
-                                        <Card key={index} className="px-2 border-solid border-2 border-sky-500 ">
-                                            <CardHeader>
-                                                <CardTitle>
-                                                    <span className="text-lg font-semibold text-blue-500">{tier.name}</span>
-                                                </CardTitle>
-                                                <CardDescription>
-                                                    <span className="text-gray-600 font-bold">Br {tier.price} /month</span>
-                                                </CardDescription>
-                                            </CardHeader>
-                                        </Card>
-                                    ))
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center">
-                                        <p className="text-gray-500 text-center">No tiers added yet</p>
-                                    </div>
-                                )
+                                {Object.keys(tiers).map((key) => (
+                                    <Card key={key} className="px-2 border-solid border-2 border-sky-500 ">
+                                        <CardHeader>
+                                            <CardTitle>
+                                                <span className="text-lg font-semibold text-blue-500">{tiers[key].name}</span>
+                                            </CardTitle>
+                                            <CardDescription>
+                                                <span className="text-gray-600 font-bold">Br {tiers[key].price} /month</span>
+                                            </CardDescription>
+                                        </CardHeader>
+                                    </Card>
+                                ))
                                 }
                             </div>
                             <span className='text-xl'>Inside the community:</span>
