@@ -74,11 +74,7 @@ export async function POST(req) {
                     }]),
                     username: creatorUsername.toLowerCase(),
                     // telegram_group_username: telegramUsername.toLowerCase(),
-                    tiers: JSON.stringify([{
-                        name: 'Tier 1',
-                        price: 1000,
-                        description: 'This is a test description for the first tier'
-                    }]),
+                    tiers: JSON.stringify([{ "name": "Tier 1", "price": 1000, "description": "This is a test description for the first tier" }]),
                 })
             if (creatorError) {
                 return NextResponse.json({ error: creatorError.message }, { status: 400 })

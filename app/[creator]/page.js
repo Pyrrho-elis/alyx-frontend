@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import YouTubeEmbed from '../components/YoutubeEmbed'
-import LoadingSkeleton  from '@/app/components/LoadingSkeleton'
+import LoadingSkeleton from '@/app/components/LoadingSkeleton'
 
 export default function CreatorPage() {
   const { creator } = useParams();
@@ -73,7 +73,7 @@ export default function CreatorPage() {
     <div className='absolute inset-0 h-fit bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem] shadow-lg p-4'>
       <div className='flex flex-col justify-center gap-4 w-full max-w-md mx-auto p-4 mb-32 backdrop-blur-sm bg-gray-100 border-solid border-2 border-gray-300 rounded-lg shadow-2xl'>
         <div className='flex flex-col justify-center items-center m-4 h-full'>
-          <Avatar className="w-64 h-64"> 
+          <Avatar className="w-64 h-64">
             <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
             <AvatarFallback>Avatar</AvatarFallback>
           </Avatar>
@@ -85,14 +85,19 @@ export default function CreatorPage() {
         <div className='grid grid-cols-2'>
           {tiers.map((tier, index) => (
             <Card key={index} className="px-2 border-solid border-2 border-sky-500 ">
-              <CardHeader>
-                <CardTitle>
-                  <span className="text-lg font-semibold text-blue-500">{tier.name}</span>
-                </CardTitle>
-                <CardDescription>
-                  <span className="text-gray-600 font-bold">Br {tier.price} /month</span>
-                </CardDescription>
-              </CardHeader>
+              {Object.keys(tiers).map((key) => (
+                <Card key={key} className="px-2 border-solid border-2 border-sky-500 ">
+                  <CardHeader>
+                    <CardTitle>
+                      <span className="text-lg font-semibold text-blue-500">{tiers[key].name}</span>
+                    </CardTitle>
+                    <CardDescription>
+                      <span className="text-gray-600 font-bold">Br {tiers[key].price} /month</span>
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))
+              }
             </Card>
             // <Card key={index} className="w-full px-4">
             //   <CardHeader>
@@ -126,8 +131,8 @@ export default function CreatorPage() {
         <p className='text-sm text-gray-500'>{creatorData.description}</p>
         <YouTubeEmbed videoId={youtubeVideoId} />
         <div className='flex flex-col justify-center items-center'>
-            <p className='text-sm text-gray-500'>@{creatorData.username}</p>
-            <p>powered by <Link href='/' className='text-blue-500 hover:underline'>Subzz</Link></p>
+          <p className='text-sm text-gray-500'>@{creatorData.username}</p>
+          <p>powered by <Link href='/' className='text-blue-500 hover:underline'>Subzz</Link></p>
         </div>
       </div>
       <div className={`fixed bottom-0 left-0 right-0 p-4 flex flex-col w-full justify-center items-center ${!creatorData.isActive ? 'opacity-50' : ''}`}>
