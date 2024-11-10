@@ -1,7 +1,6 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { useUser } from '../hooks/useUser';
 import Link from 'next/link';
 import {
   Avatar,
@@ -13,19 +12,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import YouTubeEmbed from '../components/YoutubeEmbed'
 import LoadingSkeleton from '@/app/components/LoadingSkeleton'
+import useProfileStore from '../dashboard/creator/useProfileStore';
 
 export default function CreatorPage() {
   const { creator } = useParams();
-  const [creatorData, setCreatorData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [youtubeVideoId, setYoutubeVideoId] = useState('');
-
-  const [avatarUrl, setAvatarUrl] = useState(null);
-  const [tiers, setTiers] = useState([{ name: '', price: '' }]);
-  const [perks, setPerks] = useState([]);
-  const [description, setDescription] = useState('');
-  const [title, setTitle] = useState('');
+  const { fetchCreatorData, fetchAvatarUrl, creatorData, tiers, loading, error, youtubeVideoId, avatarUrl } = useProfileStore();
 
   const validateUsername = (username) => {
     if (!username) throw 'Error: Username is required!'
@@ -33,36 +24,10 @@ export default function CreatorPage() {
     return username.toString()
   }
 
-  const fetchAvatarUrl = async () => {
-    const res = await fetch('/api/avatar');
-    const data = await res.json();
-    setAvatarUrl(data.avatarUrl);
-  };
-
   const creatorUsername = validateUsername(creator)
 
   useEffect(() => {
-    const fetchCreatorData = async () => {
-      try {
-        const response = await fetch(`/api/creator/${creatorUsername.toLowerCase()}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch creator data');
-        }
-        const data = await response.json();
-        setTitle(...title, [data.title]);
-        setTiers([JSON.parse(data.tiers)]);
-        setPerks(JSON.parse(data.perks));
-        setDescription(data.desc);
-        setCreatorData(data);
-        setYoutubeVideoId(data.youtube_video_id || '');
-      } catch (error) {
-        console.error('Error fetching creator data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCreatorData();
+    fetchCreatorData(creatorUsername);
     fetchAvatarUrl();
   }, [creator]);
 
@@ -83,33 +48,20 @@ export default function CreatorPage() {
           <p className='text-sm text-gray-500'>{creatorData.desc}</p>
         </div>
         <div className='grid grid-cols-2'>
-          {tiers.map((tier, index) => (
-            <Card key={index} className="px-2 border-solid border-2 border-sky-500 ">
-              {Object.keys(tiers).map((key) => (
-                <Card key={key} className="px-2 border-solid border-2 border-sky-500 ">
-                  <CardHeader>
-                    <CardTitle>
-                      <span className="text-lg font-semibold text-blue-500">{tiers[key].name}</span>
-                    </CardTitle>
-                    <CardDescription>
-                      <span className="text-gray-600 font-bold">Br {tiers[key].price} /month</span>
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              ))
-              }
+
+          {Object.keys(tiers).map((key) => (
+            <Card key={key} className="px-2 border-solid border-2 border-sky-500 ">
+              <CardHeader>
+                <CardTitle>
+                  <span className="text-lg font-semibold text-blue-500">{tiers[key].name}</span>
+                </CardTitle>
+                <CardDescription>
+                  <span className="text-gray-600 font-bold">Br {tiers[key].price} /month</span>
+                </CardDescription>
+              </CardHeader>
             </Card>
-            // <Card key={index} className="w-full px-4">
-            //   <CardHeader>
-            //     <CardTitle>
-            //       <h3 className="text-lg font-semibold mb-2 text-blue-500">{tier.name}</h3>
-            //     </CardTitle>
-            //     <CardDescription>
-            //       <p className="text-gray-600 font-bold">Br {tier.price} /month</p>
-            //     </CardDescription>
-            //   </CardHeader>
-            // </Card>
-          ))}
+          ))
+          }
         </div>
         <label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
           Features and Perks
@@ -119,10 +71,10 @@ export default function CreatorPage() {
             <Card key={index} className="w-full px-4 mb-2">
               <CardHeader>
                 <CardTitle>
-                  <h3 className="text-lg font-semibold mb-2 text-blue-500">{perk.name}</h3>
+                  <span className="text-lg font-semibold mb-2 text-blue-500">{perk.name}</span>
                 </CardTitle>
                 <CardDescription>
-                  <p className="text-gray-600 font-bold">{perk.desc}</p>
+                  <span className="text-gray-600 font-bold">{perk.desc}</span>
                 </CardDescription>
               </CardHeader>
             </Card>
