@@ -53,7 +53,7 @@ export default function AvatarUpload({ userId, avatarUrl }) {
         <div className='flex flex-col items-center justify-center gap-4'>
             {avatarUrl ? (
                 <Avatar className="w-32 h-32">
-                    <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
+                    <AvatarImage src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
                     <AvatarFallback>Avatar</AvatarFallback>
                 </Avatar>
             ) : (
@@ -77,7 +77,7 @@ export default function AvatarUpload({ userId, avatarUrl }) {
                     disabled={uploading}
                 />
             </div>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <div className="text-red-500 mt-2">{error}</div>}
         </div>
     );
 }

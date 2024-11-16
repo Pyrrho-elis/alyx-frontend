@@ -38,9 +38,14 @@ const benefits = [
 export default function Waitlist() {
     const [email, setEmail] = useState("")
     const [submitted, setSubmitted] = useState(false)
+    const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        setError("")
+        setLoading(true)
+
         try {
             const response = await fetch('/api/get-early-access', {
                 method: 'POST',
@@ -49,11 +54,31 @@ export default function Waitlist() {
                 },
                 body: JSON.stringify({ email }),
             })
-            if (response.ok) {
-                setSubmitted(true)
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    setError("Too many attempts. Please try again later.")
+                } else if (response.status === 400) {
+                    setError("Please enter a valid email address.")
+                } else {
+                    setError("Failed to join waitlist. Please try again.")
+                }
+                return
             }
+
+            if (data.message === 'Email already registered') {
+                setError("This email is already registered.")
+                return
+            }
+
+            setSubmitted(true)
+            setEmail("")
         } catch (error) {
-            console.error('Error submitting email:', error)
+            setError("An unexpected error occurred. Please try again.")
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -115,9 +140,12 @@ export default function Waitlist() {
                                         className="w-full"
                                     />
                                 </div>
-                                <Button type="submit" className="w-full" size="lg">
-                                    Join Waitlist
+                                <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                                    {loading ? "Joining..." : "Join Waitlist"}
                                 </Button>
+                                {error && (
+                                    <p className="text-sm text-red-500 text-center">{error}</p>
+                                )}
                                 <p className="text-sm text-gray-500 text-center">
                                     By joining, you agree to receive updates about Subzz.
                                     We respect your privacy and won't spam you.

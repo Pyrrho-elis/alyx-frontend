@@ -33,11 +33,14 @@
     "react": "^18",
     "react-dom": "^18",
     "react-rough-notation": "^1.0.5",
+    "sharp": "^0.33.5",
     "sweetalert": "^2.1.2",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-motion": "^0.4.1-beta",
+    "uuid": "^11.0.3",
     "vaul": "^0.9.4",
+    "zod": "^3.23.8",
     "zustand": "^5.0.1"
   },
   "devDependencies": {
