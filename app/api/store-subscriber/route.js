@@ -46,8 +46,8 @@ async function onBoarding(creator_id, user_id, supabase) {
             return new NextResponse(JSON.stringify({ error: 'No creator group id found' }));
         }
         const inviteLink = await createInviteLink(creatorGroupId);
-        sendMessage(user_id, `You have successfully subscribed to ${creator.username}! Click the link below to join the group:`);
-        sendMessage(user_id, inviteLink);
+        sendMessage(user_id, `You have successfully subscribed to ${creator.username}! Click the link below to join the group: <a href="${inviteLink}">Join Group</a>`);
+        // sendMessage(user_id, inviteLink);
     } catch (error) {
         console.error('Error storing subscriber:', error);
         return new NextResponse(JSON.stringify({ error: 'Failed to store subscriber' }), { status: 500 });

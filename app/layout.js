@@ -1,8 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import Navbar from "./components/Nav";
-import FadeUp from "./components/FadeUp";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import Navbar from "./components/Nav";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -21,16 +20,21 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  // const pathname = window.location.pathname;
+  // const isDashboard = pathname.startsWith("/dashboard");
   return (
     <html className="scroll-smooth" lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-custom-gradient`}
       >
+        {/* <div className="bg-custom-gradient"> */}
+        <Navbar />
         <SidebarProvider>
           {/* <div className="w-full"> */}
-            {children}
+          {children}
           {/* </div> */}
         </SidebarProvider>
+        {/* </div> */}
       </body>
     </html>
   );

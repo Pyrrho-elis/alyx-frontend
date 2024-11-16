@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Mountain, Menu } from "lucide-react"
+import { Menu } from "lucide-react"
 import Image from "next/image"
 import logo from "@/app/public/LOGO.png"
 import { Button } from "@/components/ui/button"
@@ -11,89 +11,120 @@ import {
     SheetContent,
     SheetTrigger,
 } from "@/components/ui/sheet"
+import { usePathname } from "next/navigation"
+import CustomButton from "./CustomButton"
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
+    const [scrolled, setScrolled] = useState(false)
+    const pathname = usePathname()
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20)
+        }
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
+    if (pathname.startsWith("/dashboard")) {
+        return null
+    }
+
+    const navLinks = [
+        { href: "#features", label: "Features" },
+        { href: "#pricing", label: "Pricing" },
+        { href: "/learn-more", label: "How It Works" },
+        { href: "/waitlist", label: "Get Access" },
+    ]
 
     return (
-        <nav className="sticky top-4 z-50 w-full">
-            <div className="relative mx-auto mt-4 flex h-16 max-w-3xl items-center justify-between rounded-full px-4 sm:px-6 lg:px-8 bg-white shadow-md">
-                {/* Blurry background */}
-                {/* <div className="absolute inset-0 rounded-full bg-white/30 backdrop-blur-md" /> */}
-                <div className="bg-white" />
-
-                {/* Grainy texture */}
-                {/* <div className="absolute inset-0 rounded-full opacity-50 mix-blend-multiply"
-                    style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                    }}
-                /> */}
-
+        <nav className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+            scrolled ? "py-2 bg-white/80 backdrop-blur-lg shadow-sm" : "py-4"
+        }`}>
+            <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
-                <div className="relative flex-shrink-0">
-                    <Link href="/" className="flex items-center">
-                        {/* <Mountain className="h-8 w-8 text-primary" /> */}
-                        <Image src={logo} alt="Logo" width={32} height={32} />
+                <div className="flex-shrink-0">
+                    <Link href="/" className="flex items-center gap-2">
+                        <div className="relative w-8 h-8">
+                            <Image
+                                src={logo}
+                                alt="Subzz Logo"
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                        </div>
+                        <span className="text-xl font-bold bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">
+                            SUBZZ
+                        </span>
                     </Link>
                 </div>
 
-                {/* Desktop Navigation - Centered */}
-                <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:block">
-                    <div className="flex space-x-4">
-                        <Link href="#features">
-                            <Button variant="ghost">
-                                Features
-                            </Button>
-                        </Link>
-                        <Link href="#pricing">
-                            <Button variant="ghost">
-                                Pricing
-                            </Button>
-                        </Link>
+                {/* Desktop Navigation */}
+                <div className="absolute left-1/2 -translate-x-1/2 transform">
+                    <div className="hidden md:flex md:items-center md:space-x-8">
+                        {navLinks.slice(0, -1).map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
                     </div>
                 </div>
 
                 {/* Desktop CTA Buttons */}
-                <div className="relative ml-auto hidden md:flex md:items-center">
+                <div className="hidden md:flex md:items-center md:space-x-4">
                     <Link href="/login">
-                        <Button variant="ghost" className="mr-2">
+                        <Button variant="ghost" className="text-sm font-medium">
                             Sign In
                         </Button>
                     </Link>
-                    <Link href="/apply">
-                        <Button>Get Started for Free</Button>
+                    <Link href="/waitlist">
+                        <CustomButton size="default">
+                            Get Early Access
+                        </CustomButton>
                     </Link>
                 </div>
 
                 {/* Mobile Menu Button */}
-                <div className="relative md:hidden">
+                <div className="md:hidden">
                     <Sheet open={isOpen} onOpenChange={setIsOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Menu className="h-6 w-6" />
+                            <Button variant="ghost" size="icon" className="h-10 w-10">
+                                <Menu className="h-5 w-5" />
                                 <span className="sr-only">Open menu</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                            <nav className="flex flex-col space-y-4">
-                                <Link href="#features" className="text-lg font-semibold" onClick={() => setIsOpen(false)}>
-                                    Features
-                                </Link>
-                                <Link href="#pricing" className="text-lg font-semibold" onClick={() => setIsOpen(false)}>
-                                    Pricing
-                                </Link>
-                                <hr className="my-4" />
-                                <Link href="/login" className="justify-start" onClick={() => setIsOpen(false)}>
-                                    <Button variant="ghost" className="justify-start" onClick={() => setIsOpen(false)}>
-                                        Sign In
-                                    </Button>
-                                </Link>
-                                <Link href="/apply" className="justify-start" onClick={() => setIsOpen(false)}>
-                                    <Button className="justify-start" onClick={() => setIsOpen(false)}>
-                                        Get Started for Free
-                                    </Button>
-                                </Link>
-                            </nav>
+                        <SheetContent side="right" className="w-full sm:max-w-sm">
+                            <div className="mt-6 flow-root">
+                                <div className="divide-y divide-gray-200">
+                                    <div className="space-y-2 py-6">
+                                        {navLinks.map((link) => (
+                                            <Link
+                                                key={link.href}
+                                                href={link.href}
+                                                className="block px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md"
+                                                onClick={() => setIsOpen(false)}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                    <div className="space-y-4 py-6">
+                                        <Link
+                                            href="/login"
+                                            className="block px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Sign In
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
                         </SheetContent>
                     </Sheet>
                 </div>

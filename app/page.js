@@ -1,182 +1,180 @@
 "use client"
-import { Button } from "@/components/ui/button"
-import Navbar from "./components/Nav"
+
 import Link from "next/link"
-import { ArrowBigRightDash, Star } from "lucide-react"
-import FadeUp from "./components/FadeUp"
-import { useIsVisible }  from "./hooks/useIsVisible.js"
-import { useEffect, useRef } from "react"
+import Image from "next/image"
+import { useRef } from "react"
+import { Star, CreditCard, Shield, BarChart3, RefreshCcw } from "lucide-react"
+import { RoughNotation } from "react-rough-notation"
+import CustomButton from "./components/CustomButton"
+import { useIsVisible } from "./hooks/useIsVisible.js"
+import logo from "@/app/public/LOGO.png"
 
 export default function LandingPage() {
   const sectionRef1 = useRef(null);
-  const isVisble = useIsVisible(sectionRef1);
+  const isVisible = useIsVisible(sectionRef1);
+
   return (
-    <div className="scroll-smooth flex flex-col justify-center min-h-screen py-4 px-4 m-auto overflow-x-hidden">
-      {/* <Navbar  /> */}
-      {/* Hero Section */}
-      {/* <FadeUp yPos={"-100px"}> */}
-      <div className="motion-preset-blur-right sticky">
-        <Navbar className="motion-preset-blur-right" />
-      </div>
-      {/* </FadeUp> */}
+    <div className="scroll-smooth flex flex-col justify-center min-h-screen p-4 mx-auto overflow-x-hidden">
       <section className="px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center motion-preset-blur-right ">
-            {/* <FadeUp delay={0.3}> */}
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-              <span className="block">Monetize Your</span>
-              <span className="block text-indigo-600">Telgram Community</span>
-            </h1>
-            {/* </FadeUp> */}
-            <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Streamline your community monetization with hassle-free payments, automatic member management, and a single, shareable link to your content.
-            </p>
-            <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-              <div className="rounded-md shadow">
-                <Link href="/apply">
-                  <Button size="lg" className="w-full">
-                    Get Started Free
-                  </Button>
+          <div className="relative border-gray-400 dark:border-gray-700 border-2 rounded-2xl bg-white p-8 md:p-12 shadow-sm overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50"></div>
+            
+            <div className="relative text-center">
+              <div className="flex justify-center items-center mb-6">
+                <Image src={logo} alt="Logo" width={96} height={96} priority className="transform hover:scale-105 transition-transform duration-200" />
+              </div>
+              
+              <div className="mb-6">
+                <span className="inline-flex items-center rounded-full px-4 py-1 text-sm font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                  Early Access Now Available
+                </span>
+              </div>
+
+              <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl md:max-w-4xl mx-auto">
+                <span className="block mb-2">Turn Your Community Into a</span>
+                <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight py-1">
+                  Thriving Business
+                </span>
+              </h1>
+              
+              <p className="mt-6 mx-auto text-lg text-gray-600 md:text-xl max-w-2xl">
+                The all-in-one platform that automates payments, access control, and member management.
+                <span className="block mt-1 text-gray-500">No code required. Launch in minutes.</span>
+              </p>
+              
+              <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
+                <Link href="/waitlist" className="w-full sm:w-auto">
+                  <CustomButton size="lg" className="w-full">
+                    Start For Free
+                  </CustomButton>
                 </Link>
+                <Link href="/learn-more" className="w-full sm:w-auto">
+                  <CustomButton variant="outline" size="lg" className="w-full bg-white">
+                    See How It Works
+                  </CustomButton>
+                </Link>
+              </div>
+
+              <div className="mt-8 pt-8 border-t border-gray-200">
+                <p className="text-sm text-gray-500 mb-3">Trusted by community builders worldwide</p>
+                <div className="flex justify-center gap-2 items-center text-gray-600">
+                  <div className="flex -space-x-2">
+                    {[1,2,3].map((i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+                        <span className="text-xs">👤</span>
+                      </div>
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium">+1,000 creators</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Add more sections here */}
-      <section ref={sectionRef1} id="features" className={`px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden ${isVisble ? "motion-preset-slide-right" : "invisible"}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Features</h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Empower Your Community, Anywhere
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Our platform provides all the tools you need to engage and monetize your audience.
+      <section ref={sectionRef1} id="features" className={`px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Everything you need to run your community
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+              Focus on creating value for your members while we handle the technical details
             </p>
           </div>
 
-          <div className="mt-10">
-            <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-              {[
-                {
-                  name: "Seamless Integration",
-                  description: "Connect with your existing community platforms without disrupting your audience's experience.",
-                },
-                {
-                  name: 'Flexible Monetization',
-                  description: 'Choose the monetization option that suits you best.',
-                },
-                {
-                  name: 'Automatic Member Management',
-                  description: 'Out system will automatically moderate your community members.',
-                },
-                {
-                  name: 'We Process The Payments',
-                  description: 'Creators only have to worry about their content, we will handle the rest.',
-                },
-              ].map((feature) => (
-                <div key={feature.name} className="relative">
-                  <dt>
-                    <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                      <Star />
-                      {/* You can add icons here if desired */}
-                    </div>
-                    <p className="ml-16 text-lg leading-6 font-medium text-gray-900">{feature.name}</p>
-                  </dt>
-                  <dd className="mt-2 ml-16 text-base text-gray-500">{feature.description}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="sm:text-center">
-            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Pricing</h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Choose the Perfect Plan for Your Community
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 sm:mx-auto">
-              Flexible pricing options to suit creators of all sizes. Start for free and scale as you grow.
-            </p>
-          </div>
-
-          <div className="mt-16 justify-center space-y-12 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-2">
             {[
               {
-                name: 'Starter',
-                price: 'Free',
-                description: 'Perfect for creators looking to monetize their community.',
-                features: [
-                  'Up to 100 community members',
-                  'Basic analytics',
-                  'Standard support',
-                  'Payment processing team',
-                  '15% transaction fee',
-                ],
+                name: "Automated Payment Management",
+                description: "Say goodbye to manual checks! Automatically verify payments and manage subscriptions hassle-free.",
+                icon: CreditCard,
+                gradient: "from-blue-400 to-blue-600"
               },
               {
-                name: 'Enterprise',
-                price: 'Custom',
-                description: 'For large communities and established brands.',
-                features: [
-                  'Unlimited community members',
-                  'Premium analytics with API access',
-                  'Negotiable transaction fee',
-                  'On-premise support',
-                  '24×7×365 premium enterprise support',
-                ],
+                name: "Subscription Tracking & Renewal",
+                description: "Ensure no one gets left out. Notify members about expiring subscriptions and make renewals seamless.",
+                icon: RefreshCcw,
+                gradient: "from-purple-400 to-purple-600"
               },
-            ].map((plan) => (
-              <div key={plan.name} className="relative p-8 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col gap-4">
-                <div className="flex-1 gap-4">
-                  <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
-                  {typeof plan.price === 'string' ? (
-                    <p className="mt-4 flex items-baseline text-gray-900">
-                      <span className="text-5xl font-extrabold tracking-tight">{plan.price}</span>
-                      {plan.price !== 'Custom' && <span className="ml-1 text-xl font-semibold">/month</span>}
-                    </p>
-                  ) : (
-                    <p className="mt-4 text-5xl font-extrabold text-gray-900">{plan.price}</p>
-                  )}
-                  <p className="mt-6 text-gray-500">{plan.description}</p>
-
-                  <ul className="mt-6 space-y-6">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex">
-                        <svg className="flex-shrink-0 w-6 h-6 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span className="ml-3 text-gray-500">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {
+                name: "Access Control & Abuse Prevention",
+                description: "Keep your community safe. Only paying members gain access, and expired accounts are removed automatically.",
+                icon: Shield,
+                gradient: "from-red-400 to-red-600"
+              },
+              {
+                name: "Insights & Retention Tools",
+                description: "Boost retention rates with analytics and strategies to keep members engaged and subscribed.",
+                icon: BarChart3,
+                gradient: "from-green-400 to-green-600"
+              }
+            ].map((feature) => (
+              <div
+                key={feature.name}
+                className="relative border-gray-400 dark:border-gray-700 border-2 group bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className={`rounded-xl bg-gradient-to-r ${feature.gradient} p-3 text-white`}>
+                    <feature.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-gray-600 transition-colors duration-200">
+                    {feature.name}
+                  </h3>
                 </div>
-                {/* <Button>
-                  {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
-                </Button> */}
-                <div className="w-full">
-                  {plan.name === 'Enterprise' ? (
-                    <Link className="w-full" href="/contact">
-                      <Button className="w-full">Contact Sales</Button>
-                    </Link>
-                  ) : (
-                    <Link href="/apply">
-                      <Button className="w-full">Get Started</Button>
-                    </Link>
-                  )}
-                </div>
+                <p className="mt-4 text-gray-500 text-sm leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
+
+          <div className="flex flex-col items-center mt-16">
+            <Link href="/learn-more">
+              <CustomButton variant="outline" size="lg" className="bg-white hover:bg-gray-50 transition-colors duration-200">
+                Discover More Features
+              </CustomButton>
+            </Link>
+          </div>
         </div>
       </section>
 
+      <section className="px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative border-gray-400 dark:border-gray-700 border-2 rounded-2xl bg-white p-8 md:p-12 shadow-sm overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50"></div>
 
+            <div className="relative">
+              <div className="sm:text-center">
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                  Ready to transform your community?
+                </h2>
+                <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+                  Get started in minutes and revolutionize how you manage your paid community. No technical knowledge required.
+                </p>
+              </div>
+
+              <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                <Link href="/waitlist">
+                  <CustomButton size="lg" className="w-full sm:w-auto">
+                    Request Early Access
+                  </CustomButton>
+                </Link>
+                <Link href="/learn-more">
+                  <CustomButton variant="outline" size="lg" className="w-full sm:w-auto bg-white">
+                    Learn More
+                  </CustomButton>
+                </Link>
+              </div>
+
+              <div className="mt-8 text-center">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -31,8 +31,8 @@ export async function POST(req, res) {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        userId,
-                        creator_id
+                        user_id: userId,
+                        creator_id: creator_id
                     })
                 });
                 if (!storeResponse.ok) {
