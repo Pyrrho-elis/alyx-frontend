@@ -300,25 +300,25 @@ export default function PaymentTest({ userId: propUserId, amount, currency = 'ET
                                 for (const mutation of mutations) {
                                     if (mutation.type === 'childList' || mutation.type === 'characterData') {
                                         const content = document.body.textContent;
-                                        if (content.includes(&apos;payment successful&apos;) || 
-                                            content.includes(&apos;transaction completed&apos;) ||
-                                            content.includes(&apos;thank you for your payment&apos;)) {
-                                            console.log(&apos;Payment success detected in content&apos;);
+                                        if (content.includes("payment successful") || 
+                                            content.includes("transaction completed") ||
+                                            content.includes("thank you for your payment")) {
+                                            console.log("Payment success detected in content");
                                             window.parent.postMessage({
-                                                type: &apos;paymentSuccess&apos;,
+                                                type: "paymentSuccess",
                                                 paymentId,
                                                 timestamp: Date.now()
-                                            }, &apos;*&apos;);
+                                            }, "*");
                                         }
-                                        if (content.includes(&apos;payment failed&apos;) || 
-                                            content.includes(&apos;transaction failed&apos;) ||
-                                            content.includes(&apos;payment error&apos;)) {
-                                            console.log(&apos;Payment failure detected in content&apos;);
+                                        if (content.includes("payment failed") || 
+                                            content.includes("transaction failed") ||
+                                            content.includes("payment error")) {
+                                            console.log("Payment failure detected in content");
                                             window.parent.postMessage({
-                                                type: &apos;paymentFailure&apos;,
+                                                type: "paymentFailure",
                                                 paymentId,
                                                 timestamp: Date.now()
-                                            }, &apos;*&apos;);
+                                            }, "*");
                                         }
                                     }
                                 }
@@ -373,26 +373,24 @@ export default function PaymentTest({ userId: propUserId, amount, currency = 'ET
                             await handleStoreSubscriber(paymentId);
                         }
                         break;
-                        
                     case 'paymentError':
-                        console.log('Payment error received:', event.data.error);
-                        setError(`Payment processing error: ${event.data.error}`);
+                        setError('Payment processing error occurred');
                         break;
-                        
                     case 'paymentFailure':
-                        console.log('Payment failure received');
-                        setError('Payment failed. Please try again.');
+                        setError('Payment failed');
                         break;
+                    default:
+                        console.log('Unknown message type:', type);
                 }
             } catch (error) {
                 console.error('Error handling payment message:', error);
-                setError('Error processing payment. Please try again.');
+                setError('Failed to process payment response');
             }
         };
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, [paymentState.id]);
+    }, [paymentState.id, verifyPayment, handleStoreSubscriber]);
 
     return (
         <div className="payment-container">

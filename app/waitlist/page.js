@@ -148,7 +148,7 @@ export default function Waitlist() {
                                 )}
                                 <p className="text-sm text-gray-500 text-center">
                                     By joining, you agree to receive updates about Subzz.
-                                    We respect your privacy and won't spam you.
+                                    We respect your privacy and won&apos;t spam you.
                                 </p>
                             </form>
                         </CardContent>
