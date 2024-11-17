@@ -15,8 +15,8 @@ import {
 const benefits = [
     {
         icon: BadgePercent,
-        title: "Founder's Circle Access",
-        description: "Join our exclusive Founder's Circle with direct access to our team and influence on product roadmap"
+        title: "Founder&apos;s Circle Access",
+        description: "Join our exclusive Founder&apos;s Circle with direct access to our team and influence on product roadmap"
     },
     {
         icon: Clock,

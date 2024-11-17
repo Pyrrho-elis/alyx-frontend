@@ -300,25 +300,25 @@ export default function PaymentTest({ userId: propUserId, amount, currency = 'ET
                                 for (const mutation of mutations) {
                                     if (mutation.type === 'childList' || mutation.type === 'characterData') {
                                         const content = document.body.textContent;
-                                        if (content.includes('payment successful') || 
-                                            content.includes('transaction completed') ||
-                                            content.includes('thank you for your payment')) {
-                                            console.log('Payment success detected in content');
+                                        if (content.includes(&apos;payment successful&apos;) || 
+                                            content.includes(&apos;transaction completed&apos;) ||
+                                            content.includes(&apos;thank you for your payment&apos;)) {
+                                            console.log(&apos;Payment success detected in content&apos;);
                                             window.parent.postMessage({
-                                                type: 'paymentSuccess',
+                                                type: &apos;paymentSuccess&apos;,
                                                 paymentId,
                                                 timestamp: Date.now()
-                                            }, '*');
+                                            }, &apos;*&apos;);
                                         }
-                                        if (content.includes('payment failed') || 
-                                            content.includes('transaction failed') ||
-                                            content.includes('payment error')) {
-                                            console.log('Payment failure detected in content');
+                                        if (content.includes(&apos;payment failed&apos;) || 
+                                            content.includes(&apos;transaction failed&apos;) ||
+                                            content.includes(&apos;payment error&apos;)) {
+                                            console.log(&apos;Payment failure detected in content&apos;);
                                             window.parent.postMessage({
-                                                type: 'paymentFailure',
+                                                type: &apos;paymentFailure&apos;,
                                                 paymentId,
                                                 timestamp: Date.now()
-                                            }, '*');
+                                            }, &apos;*&apos;);
                                         }
                                     }
                                 }
