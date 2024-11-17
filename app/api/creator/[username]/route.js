@@ -12,7 +12,7 @@ const MAX_REQUESTS = {
 };
 
 // Allowed fields for update
-const ALLOWED_FIELDS = ['title', 'desc', 'tiers', 'perks', 'youtube_video_id'];
+const ALLOWED_FIELDS = ['title', 'desc', 'tiers', 'perks', 'youtube_video_id', 'isActive'];
 
 function isRateLimited(ip, method) {
   const now = Date.now();
@@ -111,7 +111,7 @@ export async function GET(req, { params }) {
   try {
     const { data: creator, error } = await supabase
       .from('creators_page')
-      .select('id, username, title, desc, tiers, perks, youtube_video_id, avatar_url')
+      .select('id, username, title, desc, tiers, perks, youtube_video_id, avatar_url, isActive')
       .eq('username', username)
       .single();
 
@@ -142,75 +142,50 @@ export async function PUT(req, { params }) {
   
   // Check rate limit for PUT requests
   if (isRateLimited(ip, 'PUT')) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again later.' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
   try {
-    // Validate user authentication and permissions
-    const { valid, error, user, profile } = await validateUser(supabase, username);
-    if (!valid) {
-      return NextResponse.json({ error }, { status: 401 });
+    const supabase = createClient(cookies());
+    const validation = await validateUser(supabase, username);
+    
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 403 });
     }
 
-    // Validate and sanitize input data
-    const rawData = await req.json();
-    const sanitizedData = sanitizeUpdateData(rawData);
+    const data = await req.json();
+    const sanitizedData = sanitizeUpdateData(data);
 
     if (Object.keys(sanitizedData).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
 
-    let result;
-    if (!profile) {
-      // Create new profile
-      const { data: newProfile, error: createError } = await supabase
-        .from('creators_page')
-        .insert([{
-          ...sanitizedData,
-          username,
-          id: user.id
-        }])
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Profile creation error:', createError);
-        throw new Error('Failed to create profile');
-      }
-      result = newProfile;
-    } else {
-      // Update existing profile
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('creators_page')
-        .update(sanitizedData)
-        .eq('username', username)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        throw new Error('Failed to update profile');
-      }
-      result = updatedProfile;
+    // Check if the record exists first
+    const { data: existingData } = await supabase
+      .from('creators_page')
+      .select('*')
+      .eq('username', username)
+      .single();
+    
+    if (!existingData) {
+      return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ 
-      message: profile ? 'Profile updated successfully' : 'Profile created successfully',
-      data: result
-    });
+    const { error: updateError } = await supabase
+      .from('creators_page')
+      .update(sanitizedData)
+      .eq('username', username)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Database error:', updateError);
+      return NextResponse.json({ error: 'Failed to update data', details: updateError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    // Log error internally but don't expose details
-    console.error('Error ID: ' + Date.now(), { 
-      type: 'UPDATE_CREATOR_ERROR',
-      username,
-      error: error.message 
-    });
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+    console.error('PUT error:', error);
+    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
   }
 }

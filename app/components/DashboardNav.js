@@ -21,48 +21,45 @@ function Navbar({ user, logout }) {
     }
 
     useEffect(() => {
-        if (user) {
+        if (user?.user_metadata?.username) {
             setEmail(user.email)
             setUsername(user.user_metadata.username)
-            fetchCreatorData(username);
+            fetchCreatorData(user.user_metadata.username);
         }
-    }, [user])
+    }, [user, fetchCreatorData])
 
     return (
         <nav className="sticky w-full top-0 z-50 bg-gray-300">
             <div className="relative lg:m-0 flex h-[65px] min-w-full items-center sm:px-2 md:px-2 lg:px-8 bg-white border-b border-gray-300">
                 <div className="bg-gray-300" />
                 <div className="flex w-full px-4 space-x-4 md:hidden">
-                    {isActive ? (
-                        <>
-                            <Button className="shadow-sm" variant="outline" onClick={handlePublishClick}>
-                                Unpublish
-                            </Button>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="shine">Share</Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="">
-                                    <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
-                                    <div className="flex gap-4 p-4">
-                                        <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${username}`} />
-                                        <Button onClick={() => {
-                                            navigator.clipboard.writeText(`subzz.vercel.app/${username}`)
-                                            setIsCopied(true)
-                                            setTimeout(() => {
-                                                setIsCopied(false)
-                                            }, 2000)
-                                        }}>{isCopied ? 'Copied' : 'Copy'}</Button>
-                                    </div>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </>
-                    ) : (
-                        <div className="ml-auto hidden md:flex md:items-center">
-                            <Button className="shadow-sm" variant="ringHover" onClick={handlePublishClick}>
-                                Publish
-                            </Button>
-                        </div>
+                    <Button 
+                        className="shadow-sm" 
+                        variant="outline" 
+                        onClick={handlePublishClick}
+                        disabled={loading}
+                    >
+                        {loading ? 'Loading...' : isActive ? 'Unpublish' : 'Publish'}
+                    </Button>
+                    {isActive && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="shine">Share</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="">
+                                <DropdownMenuLabel>Share Your Community</DropdownMenuLabel>
+                                <div className="flex gap-4 p-4">
+                                    <Input className="font-bold text-base" disabled value={`subzz.vercel.app/${username}`} />
+                                    <Button onClick={() => {
+                                        navigator.clipboard.writeText(`subzz.vercel.app/${username}`)
+                                        setIsCopied(true)
+                                        setTimeout(() => {
+                                            setIsCopied(false)
+                                        }, 2000)
+                                    }}>{isCopied ? 'Copied' : 'Copy'}</Button>
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
                 </div>
 

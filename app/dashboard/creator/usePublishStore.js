@@ -4,6 +4,8 @@ const usePublishStore = create((set, get) => ({
     isActive: false,
     loading: false,
     fetchCreatorData: async (username) => {
+        if (!username) return;
+        
         set({ loading: true });
         try {
             const response = await fetch(`/api/creator/${username}`);
@@ -11,37 +13,42 @@ const usePublishStore = create((set, get) => ({
                 throw new Error('Failed to fetch creator data');
             }
             const data = await response.json();
-            set({ isActive: data.isActive }); // Set the fetched state
+            set({ isActive: Boolean(data.isActive) });
         } catch (error) {
             console.error('Error fetching creator data:', error);
+            set({ isActive: false });
         } finally {
             set({ loading: false });
         }
     },
     togglePublish: async (username) => {
-        set({ loading: true }); // Optionally set loading here
+        if (!username) return;
+        
+        set({ loading: true });
         try {
-            const currentState = get().isActive; // Use get() instead of set.getState()
+            const currentState = get().isActive;
+            
             const response = await fetch(`/api/creator/${username}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    isActive: !currentState, // Send the opposite of the current state
+                    isActive: !currentState
                 }),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to update creator data');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update');
             }
 
-            await response.json(); // Handle the response if needed
-
-            // After updating, fetch the latest data
-            await get().fetchCreatorData(username); // Use get() here as well
+            const data = await response.json();
+            if (data.success) {
+                set({ isActive: !currentState });
+            }
         } catch (error) {
-            console.error('Error updating creator data:', error);
+            console.error('Error toggling publish state:', error);
         } finally {
             set({ loading: false });
         }

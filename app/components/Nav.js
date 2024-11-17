@@ -39,9 +39,8 @@ export default function Navbar() {
     ]
 
     return (
-        <nav className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-            scrolled ? "py-2 bg-white/80 backdrop-blur-lg shadow-sm" : "py-4"
-        }`}>
+        <nav className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? "py-2 bg-white/80 backdrop-blur-lg shadow-sm" : "py-4"
+            }`}>
             <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
                 <div className="flex-shrink-0">
@@ -55,7 +54,7 @@ export default function Navbar() {
                                 priority
                             />
                         </div>
-                        <span className="text-xl font-bold bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">
+                        <span className="text-xl font-bold bg-gradient-to-r from-black/90 to-primary bg-clip-text text-transparent">
                             SUBZZ
                         </span>
                     </Link>
@@ -78,13 +77,13 @@ export default function Navbar() {
 
                 {/* Desktop CTA Buttons */}
                 <div className="hidden md:flex md:items-center md:space-x-4">
-                    <Link href="/login">
+                    {/* <Link href="/login">
                         <Button variant="ghost" className="text-sm font-medium">
                             Sign In
                         </Button>
-                    </Link>
+                    </Link> */}
                     <Link href="/waitlist">
-                        <CustomButton size="default">
+                        <CustomButton variant="gooeyLeft">
                             Get Early Access
                         </CustomButton>
                     </Link>
@@ -115,13 +114,13 @@ export default function Navbar() {
                                         ))}
                                     </div>
                                     <div className="space-y-4 py-6">
-                                        <Link
+                                        {/* <Link
                                             href="/login"
                                             className="block px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md"
                                             onClick={() => setIsOpen(false)}
                                         >
                                             Sign In
-                                        </Link>
+                                        </Link> */}
                                     </div>
                                 </div>
                             </div>

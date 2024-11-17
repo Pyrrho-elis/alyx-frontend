@@ -1,10 +1,11 @@
-
 import { createServerClient } from "@supabase/ssr";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export const createClient = (request) => {
-  // Create an unmodified response
-  let supabaseResponse = NextResponse.next({
+  const cookies = request.cookies;
+
+  // Create a response object
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -15,22 +16,20 @@ export const createClient = (request) => {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
+        get(name) {
+          return cookies.get(name)?.value;
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+        set(name, value, options) {
+          cookies.set({ name, value, ...options });
+          response.cookies.set({ name, value, ...options });
+        },
+        remove(name, options) {
+          cookies.set({ name, value: '', ...options });
+          response.cookies.set({ name, value: '', ...options });
         },
       },
-    },
+    }
   );
 
-  return supabaseResponse
+  return { supabase, response };
 };
-

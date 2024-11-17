@@ -3,15 +3,12 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useRef } from "react"
-import { Star, CreditCard, Shield, BarChart3, RefreshCcw } from "lucide-react"
+import { Star, CreditCard, Shield, BarChart3, RefreshCcw, Rocket, PlayCircle } from "lucide-react"
 import { RoughNotation } from "react-rough-notation"
 import CustomButton from "./components/CustomButton"
-import { useIsVisible } from "./hooks/useIsVisible.js"
 import logo from "@/app/public/LOGO.png"
 
 export default function LandingPage() {
-  const sectionRef1 = useRef(null);
-  const isVisible = useIsVisible(sectionRef1);
 
   return (
     <div className="scroll-smooth flex flex-col justify-center min-h-screen p-4 mx-auto overflow-x-hidden">
@@ -19,12 +16,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="relative border-gray-400 dark:border-gray-700 border-2 rounded-2xl bg-white p-8 md:p-12 shadow-sm overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50"></div>
-            
+
             <div className="relative text-center">
               <div className="flex justify-center items-center mb-6">
                 <Image src={logo} alt="Logo" width={96} height={96} priority className="transform hover:scale-105 transition-transform duration-200" />
               </div>
-              
+
               <div className="mb-6">
                 <span className="inline-flex items-center rounded-full px-4 py-1 text-sm font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
                   Early Access Now Available
@@ -37,30 +34,30 @@ export default function LandingPage() {
                   Thriving Business
                 </span>
               </h1>
-              
+
               <p className="mt-6 mx-auto text-lg text-gray-600 md:text-xl max-w-2xl">
                 The all-in-one platform that automates payments, access control, and member management.
                 <span className="block mt-1 text-gray-500">No code required. Launch in minutes.</span>
               </p>
-              
+
               <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
                 <Link href="/waitlist" className="w-full sm:w-auto">
-                  <CustomButton size="lg" className="w-full">
+                  <CustomButton variant="gooeyLeft" size="lg" className="w-full" icon={Rocket}>
                     Start For Free
                   </CustomButton>
                 </Link>
                 <Link href="/learn-more" className="w-full sm:w-auto">
-                  <CustomButton variant="outline" size="lg" className="w-full bg-white">
+                  <CustomButton variant="outline" size="lg" className="w-full bg-white border-2 border-gray-400" icon={PlayCircle}>
                     See How It Works
                   </CustomButton>
                 </Link>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-gray-200">
+              <div className="mt-8 pt-8 border-t border-gray-200 hidden">
                 <p className="text-sm text-gray-500 mb-3">Trusted by community builders worldwide</p>
                 <div className="flex justify-center gap-2 items-center text-gray-600">
                   <div className="flex -space-x-2">
-                    {[1,2,3].map((i) => (
+                    {[1, 2, 3].map((i) => (
                       <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
                         <span className="text-xs">👤</span>
                       </div>
@@ -74,7 +71,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section ref={sectionRef1} id="features" className={`px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden`}>
+      <section id="features" className={`px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden`}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -133,7 +130,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col items-center mt-16">
             <Link href="/learn-more">
-              <CustomButton variant="outline" size="lg" className="bg-white hover:bg-gray-50 transition-colors duration-200">
+              <CustomButton variant="outline" size="lg" className="w-full bg-white border-2 border-gray-400" icon={PlayCircle}>
                 Discover More Features
               </CustomButton>
             </Link>
@@ -158,18 +155,19 @@ export default function LandingPage() {
 
               <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
                 <Link href="/waitlist">
-                  <CustomButton size="lg" className="w-full sm:w-auto">
+                  <CustomButton variant="gooeyLeft" size="lg" className="w-full" icon={Rocket}>
                     Request Early Access
                   </CustomButton>
                 </Link>
                 <Link href="/learn-more">
-                  <CustomButton variant="outline" size="lg" className="w-full sm:w-auto bg-white">
-                    Learn More
+                  <CustomButton variant="outline" size="lg" className="w-full bg-white border-2 border-gray-400" icon={PlayCircle}>
+                    See How It Works
                   </CustomButton>
                 </Link>
               </div>
 
-              <div className="mt-8 text-center">
+              <div className="mt-4 text-center text-sm text-gray-500">
+                We value your privacy. Your information is secure.
               </div>
             </div>
           </div>

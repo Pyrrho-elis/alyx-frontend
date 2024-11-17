@@ -21,7 +21,7 @@ const features = [
       "Multiple payment methods support",
       "Automated invoice generation",
       "Flexible subscription plans",
-      "Instant refund processing"
+      "Customizable payment reminders"
     ]
   },
   {
@@ -31,8 +31,8 @@ const features = [
     details: [
       "Role-based permissions",
       "Automatic access management",
-      "IP-based restrictions",
-      "Two-factor authentication"
+      "Customizable access rules",
+      "Member segmentation"
     ]
   },
   {
@@ -52,8 +52,8 @@ const features = [
     icon: Users,
     details: [
       "Automated welcome flows",
-      "Member directory management",
-      "Group discussions",
+      "Profanity filter",
+      "Automated non-paying member removal",
       "Content moderation tools"
     ]
   }
@@ -61,12 +61,8 @@ const features = [
 
 const faqs = [
   {
-    question: "How secure is Subzz?",
-    answer: "Subzz uses bank-level security with 256-bit encryption. We're SOC 2 compliant and regularly undergo security audits. Your data and your members' information are protected by industry-leading security measures."
-  },
-  {
     question: "What payment methods do you support?",
-    answer: "We support all major credit cards, PayPal, and bank transfers. We're also integrated with popular payment gateways like Stripe and can handle multiple currencies."
+    answer: "We support all major wallets and bank transfers."
   },
   {
     question: "Can I migrate my existing community?",
@@ -74,11 +70,11 @@ const faqs = [
   },
   {
     question: "How much does it cost?",
-    answer: "We offer flexible pricing based on your community size. Our starter plan begins at $49/month and includes all core features. Custom enterprise plans are available for larger communities."
+    answer: "We don't charge any upfront fees to use our tool. You can get started for free and only pay a small processing fee per transaction. No monthly subscription fees, no matter how big your community grows."
   },
   {
     question: "Do you offer a free trial?",
-    answer: "Yes, we offer a 14-day free trial with full access to all features. No credit card required to start."
+    answer: "Yes, we offer a 14-day free trial with full access to all premium features. No credit card required to start."
   },
   {
     question: "What kind of support do you provide?",

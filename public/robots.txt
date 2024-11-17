@@ -1,0 +1,13 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+Allow: /learn-more
+Allow: /waitlist
+
+# Disallow admin and API routes
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://subzz.com/sitemap.xml

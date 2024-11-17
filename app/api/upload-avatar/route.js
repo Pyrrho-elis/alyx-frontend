@@ -47,15 +47,15 @@ export async function POST(req) {
 
         // File size validation
         if (file.size > MAX_FILE_SIZE) {
-            return NextResponse.json({ 
-                error: `File size exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit` 
+            return NextResponse.json({
+                error: `File size exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit`
             }, { status: 400 });
         }
 
         // File type validation
         if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-            return NextResponse.json({ 
-                error: `Invalid file type. Allowed types: ${ALLOWED_FILE_TYPES.join(', ')}` 
+            return NextResponse.json({
+                error: `Invalid file type. Allowed types: ${ALLOWED_FILE_TYPES.join(', ')}`
             }, { status: 400 });
         }
 
