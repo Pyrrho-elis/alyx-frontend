@@ -32,9 +32,9 @@ export default function Navbar() {
     }
 
     const navLinks = [
-        { href: "#features", label: "Features" },
-        { href: "#pricing", label: "Pricing" },
+        { href: "/waitlist", label: "Join the Waitlist" },
         { href: "/learn-more", label: "How It Works" },
+        { href: "/contact", label: "Contact" },
         { href: "/waitlist", label: "Get Access" },
     ]
 
@@ -77,11 +77,6 @@ export default function Navbar() {
 
                 {/* Desktop CTA Buttons */}
                 <div className="hidden md:flex md:items-center md:space-x-4">
-                    {/* <Link href="/login">
-                        <Button variant="ghost" className="text-sm font-medium">
-                            Sign In
-                        </Button>
-                    </Link> */}
                     <Link href="/waitlist">
                         <CustomButton variant="gooeyLeft">
                             Get Early Access
@@ -112,15 +107,6 @@ export default function Navbar() {
                                                 {link.label}
                                             </Link>
                                         ))}
-                                    </div>
-                                    <div className="space-y-4 py-6">
-                                        {/* <Link
-                                            href="/login"
-                                            className="block px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            Sign In
-                                        </Link> */}
                                     </div>
                                 </div>
                             </div>

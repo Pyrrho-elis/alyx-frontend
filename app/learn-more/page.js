@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronDown, CreditCard, Shield, BarChart3, RefreshCcw, Users, Zap } from "lucide-react"
+import { ChevronDown, UserPlus, BarChart2, RefreshCcw, Shield, Brush, CreditCard, Zap } from "lucide-react"
 import CustomButton from "../components/CustomButton"
 import {
   Accordion,
@@ -14,71 +14,93 @@ import {
 
 const features = [
   {
-    title: "Automated Payment Management",
-    description: "Seamlessly handle subscriptions, one-time payments, and recurring billing. Our platform automatically processes payments, sends invoices, and manages refunds.",
-    icon: CreditCard,
+    title: "Smart Community Onboarding",
+    description: "Automate your community's onboarding process with customizable workflows, welcome messages, and instant access management.",
+    icon: UserPlus,
     details: [
-      "Multiple payment methods support",
-      "Automated invoice generation",
-      "Flexible subscription plans",
-      "Customizable payment reminders"
+      "Automated member invitations",
+      "Customizable welcome sequences",
+      "Smart access provisioning",
+      "Seamless platform integration"
     ]
   },
   {
-    title: "Smart Access Control",
-    description: "Protect your content and community with advanced access management. Automatically grant and revoke access based on payment status.",
+    title: "Community Analytics",
+    description: "Make data-driven decisions with comprehensive insights into your community's engagement, growth, and revenue metrics.",
+    icon: BarChart2,
+    details: [
+      "Member activity tracking",
+      "Engagement trends and patterns",
+      "Revenue analytics",
+      "Retention insights"
+    ]
+  },
+  {
+    title: "Subscription Management",
+    description: "Streamline your community's subscription lifecycle with automated access control, renewals, and member management.",
+    icon: RefreshCcw,
+    details: [
+      "Automated access management",
+      "Smart renewal notifications",
+      "Member status tracking",
+      "Seamless subscription handling"
+    ]
+  },
+  {
+    title: "Advanced Security",
+    description: "Protect your community with intelligent moderation tools and automated security features.",
     icon: Shield,
     details: [
-      "Role-based permissions",
-      "Automatic access management",
-      "Customizable access rules",
-      "Member segmentation"
+      "Content moderation",
+      "Anti-spam protection",
+      "Member verification",
+      "Custom security rules"
     ]
   },
   {
-    title: "Analytics & Insights",
-    description: "Make data-driven decisions with comprehensive analytics. Track member engagement, revenue metrics, and community growth.",
-    icon: BarChart3,
+    title: "Brand Customization",
+    description: "Create a professional and cohesive community experience with comprehensive branding and customization options.",
+    icon: Brush,
     details: [
-      "Real-time revenue tracking",
-      "Member engagement metrics",
-      "Churn prediction",
-      "Custom report generation"
+      "Custom branding elements",
+      "Personalized messaging",
+      "Branded notifications",
+      "Custom community URLs"
     ]
   },
   {
-    title: "Community Management",
-    description: "Powerful tools to manage and grow your community. From member onboarding to engagement tracking.",
-    icon: Users,
+    title: "Revenue Intelligence",
+    description: "Optimize your community's financial performance with detailed payment analytics and subscriber insights.",
+    icon: CreditCard,
     details: [
-      "Automated welcome flows",
-      "Profanity filter",
-      "Automated non-paying member removal",
-      "Content moderation tools"
+      "Subscription analytics",
+      "Payment tracking",
+      "Revenue forecasting",
+      "Member value analysis"
     ]
   }
 ]
 
 const faqs = [
   {
-    question: "What payment methods do you support?",
-    answer: "We support all major wallets and bank transfers."
+    question: "What platforms does Subzz currently support?",
+    answer: "We currently support Telegram communities, with plans to expand to other popular platforms in the future. We're starting with Telegram to perfect our core features and ensure an exceptional experience before expanding our platform support."
   },
   {
-    question: "Can I migrate my existing community?",
-    answer: "Yes! We provide migration tools and dedicated support to help you seamlessly transfer your existing community. Our team will assist you throughout the process."
+    question: "How does Subzz handle payments?",
+    answer: "Subzz integrates with popular payment processors to handle subscriptions securely. We support multiple payment methods and automatically manage access based on payment status."
   },
   {
-    question: "How much does it cost?",
-    answer: "We don't charge any upfront fees to use our tool. You can get started for free and only pay a small processing fee per transaction. No monthly subscription fees, no matter how big your community grows."
+    question: "Can I migrate my existing community to Subzz?",
+    answer: "We're currently developing our community migration tools to ensure a smooth transition process. While this feature isn't available yet, it's a top priority on our roadmap. We'll notify our users as soon as migration support becomes available."
   },
   {
-    question: "Do you offer a free trial?",
-    answer: "Yes, we offer a 14-day free trial with full access to all premium features. No credit card required to start."
+    question: "Is there a free trial?",
+    answer: "Yes! We offer a 14-day free trial so you can explore all of Subzz's features. Early access members get extended trial periods and special pricing."
   },
   {
-    question: "What kind of support do you provide?",
-    answer: "We offer 24/7 email support, live chat during business hours, and priority phone support for enterprise plans. Our knowledge base is also available with detailed guides and tutorials."
+    question: "What kind of support do you offer?",
+    answer: "We provide comprehensive support through our help center, email support, and priority assistance for specific plans. Our team is committed to helping you succeed."
   }
 ]
 
@@ -95,7 +117,7 @@ function FeatureCard({ feature }) {
         <div className="flex-1">
           <h3 className="font-semibold text-lg text-gray-900">{feature.title}</h3>
           <p className="mt-2 text-gray-600">{feature.description}</p>
-          
+
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="mt-4 flex items-center text-sm text-blue-600 hover:text-blue-700"
@@ -103,7 +125,7 @@ function FeatureCard({ feature }) {
             {isExpanded ? "Show less" : "Learn more"}
             <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
           </button>
-          
+
           {isExpanded && (
             <ul className="mt-4 space-y-2">
               {feature.details.map((detail, index) => (
@@ -128,11 +150,11 @@ export default function LearnMore() {
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            Everything You Need to Know About{" "}
+            Build and Grow Your Community with{" "}
             <span className="text-blue-600">Subzz</span>
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-600">
-            Discover how Subzz helps creators turn their communities into thriving businesses with powerful features and seamless automation.
+            Subzz is your all-in-one platform for managing paid communities. Starting with Telegram support, we&apos;re building the future of community management - where automation meets engagement.
           </p>
         </div>
       </section>
@@ -145,6 +167,11 @@ export default function LearnMore() {
               <FeatureCard key={index} feature={feature} />
             ))}
           </div>
+        </div>
+        <div className="max-w-7xl mx-auto text-center mt-12">
+          <p className="text-lg text-gray-600">
+            Currently supporting Telegram communities, with more platforms coming soon! We&apos;re building Subzz to be the ultimate tool for community creators, regardless of platform.
+          </p>
         </div>
       </section>
 

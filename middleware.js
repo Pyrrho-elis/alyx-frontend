@@ -6,6 +6,7 @@ const PUBLIC_ROUTES = [
   '/',
   '/learn-more',
   '/waitlist',
+  '/contact'
 ]
 
 // API routes that are needed for public functionality
