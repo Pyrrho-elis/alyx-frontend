@@ -2,7 +2,22 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcrypt'
 import { createClient } from '@/app/utils/supabase/server'
 import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
+// Create a Supabase client with service role for admin operations
+const createAdminClient = (cookieStore) => {
+    return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        {
+            cookies: {
+                get: (name) => cookieStore.get(name)?.value,
+                set: (name, value, options) => cookieStore.set(name, value, options),
+                remove: (name, options) => cookieStore.set(name, '', options),
+            },
+        }
+    )
+}
 
 const validateAccNo = (accNo) => {
     if (!accNo) return { error: "Error: Account Number is required!" }
@@ -22,18 +37,92 @@ export async function POST(req) {
         const supabase = createClient(cookieStore)
 
         const { email, password, creator_name, username, type } = await req.json()
-        // console.log(email, password, creator_name, username, type)
+        console.log(email, password, creator_name, username, type)
 
 
         if (type === 'login') {
+            console.log("logging in")
+            // Use regular client for initial login
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             })
             if (error) {
-                return NextResponse.json({ error: error.message }, { status: 400 })
+                console.error('Login error:', error);
+                return NextResponse.json({ error: error.message }, { 
+                    status: 400,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
             }
-            return NextResponse.json({ session: data.session }, { status: 200 })
+
+            // Use admin client to check if user should be admin
+            const adminClient = createAdminClient(cookieStore)
+            
+            // Get current user metadata
+            const { data: { user: currentUser }, error: getUserError } = await adminClient.auth.admin.getUserById(data.user.id)
+            
+            if (getUserError) {
+                console.error('Error getting user:', getUserError);
+                return NextResponse.json({ error: getUserError.message }, { 
+                    status: 500,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+            }
+
+            // Only update metadata if needed (e.g., if user is an admin but metadata doesn't reflect it)
+            const isAdmin = email === 'naolm75@gmail.com' // Replace with your admin email
+            if (isAdmin && !currentUser.user_metadata?.is_admin) {
+                const { error: updateError } = await adminClient.auth.admin.updateUserById(
+                    data.user.id,
+                    {
+                        user_metadata: {
+                            ...currentUser.user_metadata,
+                            is_admin: true
+                        }
+                    }
+                )
+
+                if (updateError) {
+                    console.error('Error updating user metadata:', updateError);
+                } else {
+                    console.log('Successfully updated user metadata');
+                }
+
+                // Sign in again to get fresh session
+                const { data: refreshedSession, error: refreshError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
+
+                if (refreshError) {
+                    console.error('Error refreshing session:', refreshError);
+                    return NextResponse.json({ error: refreshError.message }, { 
+                        status: 400,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                }
+
+                return NextResponse.json({ session: refreshedSession.session }, { 
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+            }
+
+            // If no updates needed, return original session
+            return NextResponse.json({ session: data.session }, { 
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
         }
         if (type === 'signup') {
             // Validate account number and username

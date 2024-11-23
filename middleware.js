@@ -1,26 +1,37 @@
-import { NextResponse } from 'next/server'
-import { createClient } from './app/utils/supabase/middleware'
+import { NextResponse } from 'next/server';
+import { createClient } from './app/utils/supabase/middleware';
 
-// Public routes that anyone can access
+// Routes that are public (no auth required)
 const PUBLIC_ROUTES = [
+  '/login', // Allow access to login page
+  '/waitlist',
+  '/pay',
+  '/paytest',
+  '/creator',
   '/',
   '/learn-more',
-  '/waitlist',
-  '/contact'
-]
+  '/contact',
+  '/admin'  // Adding admin route as public
+];
 
-// API routes that are needed for public functionality
+// API routes that are public
 const PUBLIC_API_ROUTES = [
-  '/api/get-early-access',
-  '/api/creator',
   '/api/pay',
+  '/api/proxy',
   '/api/verify-payment-token',
   '/api/store-subscriber',
-  '/api/proxy'
-]
+  '/api/check-subscription',
+  '/api/get-early-access',
+  '/api/auth'  // Add auth endpoint to public routes
+];
 
-// Static assets and system routes
-const SYSTEM_ROUTES = [
+// Admin routes (requires special admin flag)
+const ADMIN_ROUTES = [
+  '/admin'
+];
+
+// Static assets and system routes that bypass middleware
+const BYPASS_ROUTES = [
   '/_next',
   '/fonts',
   '/images',
@@ -28,38 +39,62 @@ const SYSTEM_ROUTES = [
   '/manifest.json',
   '/robots.txt',
   '/sitemap.xml'
-]
+];
 
 export async function middleware(req) {
-  // Check if it's a system route (always allow)
-  if (SYSTEM_ROUTES.some(route => req.nextUrl.pathname.startsWith(route))) {
+  const pathname = req.nextUrl.pathname;
+
+  // Bypass middleware for static assets and system routes
+  if (BYPASS_ROUTES.some(route => pathname.startsWith(route))) {
     return NextResponse.next();
   }
 
-  // Check if it's a public route (allow without auth)
-  const isPublicRoute = PUBLIC_ROUTES.some(route => 
-    req.nextUrl.pathname === route || req.nextUrl.pathname === `${route}/`
+  // Allow public routes
+  const isPublicRoute = PUBLIC_ROUTES.some(route =>
+    pathname === route ||
+    pathname === `${route}/` ||
+    (route === '/creator' && pathname.startsWith(route))
   );
-
-  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  );
+  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route));
 
   if (isPublicRoute || isPublicApiRoute) {
     return NextResponse.next();
   }
 
-  // For all other routes, require authentication
+  // For all other routes, check authentication
   try {
     const { supabase, response } = createClient(req);
-    const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (error || !session) {
-      // Redirect to home if not authenticated
-      return NextResponse.redirect(new URL('/', req.url));
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      // Store the attempted URL to redirect back after login
+      const redirectUrl = new URL('/login', req.url);
+      redirectUrl.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // Allow authenticated requests to proceed
+    // Check if user is admin first - if they are, allow access to everything
+    // const { data: userData, error: userDataError } = await supabase
+    //   .from('users')
+    //   .select('is_admin, is_whitelisted')
+    //   .eq('id', user.id)
+    //   .single();
+
+    // console.log(userData)
+    // If user is admin, allow access to everything
+    console.log("User:", user)
+    if (user?.user_metadata?.is_admin) {
+      return response;
+    }
+
+    // For non-admin users, check whitelist status
+    if (!user?.user_metadata?.is_whitelisted) {
+      console.log('Access denied for non-whitelisted user:', user.id);
+      return NextResponse.redirect(new URL('/waitlist', req.url));
+    }
+
     return response;
   } catch (error) {
     console.error('Middleware error:', error);
@@ -69,12 +104,6 @@ export async function middleware(req) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }

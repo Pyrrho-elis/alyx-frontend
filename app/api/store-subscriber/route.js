@@ -7,26 +7,79 @@ export async function POST(req) {
     const supabase = createClient(cookieStore)
     const { user_id, creator_id } = await req.json();
 
-    console.log(user_id, creator_id)
+    console.log('Storing subscriber:', { user_id, creator_id });
 
     try {
-        const { data: subscriber, error } = await supabase
+        // First check if there's already an active subscription
+        const { data: existingSubs, error: checkError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('telegram_user_id', user_id)
+            .eq('creator_id', creator_id)
+            .eq('status', 'active')
+            .gte('expiration_date', new Date().toISOString());
+
+        if (checkError) {
+            console.error('Error checking existing subscription:', checkError);
+            throw checkError;
+        }
+
+        if (existingSubs && existingSubs.length > 0) {
+            console.log('Found existing active subscription:', existingSubs[0]);
+            return NextResponse.json({ 
+                message: 'Subscription already exists',
+                subscription: existingSubs[0]
+            });
+        }
+
+        // First, update the subscription request
+        const { error: requestError } = await supabase
             .from('subscription_requests')
             .update({
                 status: 'active',
             })
             .eq('creator_id', creator_id)
-            .eq('user_id', user_id)
+            .eq('user_id', user_id);
 
-        if (error) throw error;
-        onBoarding(creator_id, user_id, supabase);
-        return NextResponse.json({ success: true });
+        if (requestError) {
+            console.error('Error updating subscription request:', requestError);
+            throw requestError;
+        }
+
+        // Then, create a new subscription
+        const expirationDate = new Date();
+        expirationDate.setMonth(expirationDate.getMonth() + 1); // 1 month subscription
+
+        const { data: subscription, error: subscriptionError } = await supabase
+            .from('subscriptions')
+            .upsert({
+                telegram_user_id: user_id,
+                creator_id: creator_id,
+                status: 'active',
+                created_at: new Date().toISOString(),
+                expiration_date: expirationDate.toISOString()
+            });
+
+        if (subscriptionError) {
+            console.error('Error creating subscription:', subscriptionError);
+            throw subscriptionError;
+        }
+
+        console.log('Created new subscription:', subscription);
+
+        // Start onboarding process
+        const onboardingResult = await onBoarding(creator_id, user_id, supabase);
+        console.log('Onboarding result:', onboardingResult);
+
+        return NextResponse.json({ 
+            success: true,
+            subscription: subscription,
+            onboarding: onboardingResult
+        });
     } catch (error) {
         console.error('Error storing subscriber:', error);
-        return NextResponse.json({ error: 'Failed to store subscriber' }, { status: 500 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
-    return new NextResponse(JSON.stringify({ success: true }));
 }
 
 async function onBoarding(creator_id, user_id, supabase) {
@@ -37,20 +90,33 @@ async function onBoarding(creator_id, user_id, supabase) {
             .eq('username', creator_id)
             .single();
         if (error) {
-            console.log(error);
-            return new NextResponse(JSON.stringify({ error: error.message }));
+            console.error('Error fetching creator:', error);
+            return { success: false, error: error.message };
         }
+
         const creatorGroupId = creator.telegram_group_id;
         if (!creatorGroupId) {
-            console.log('No creator group id found');
-            return new NextResponse(JSON.stringify({ error: 'No creator group id found' }));
+            console.error('No creator group id found');
+            return { success: false, error: 'No creator group id found' };
         }
+
         const inviteLink = await createInviteLink(creatorGroupId);
-        sendMessage(user_id, `You have successfully subscribed to ${creator.username}! Click the link below to join the group: <a href="${inviteLink}">Join Group</a>`);
-        // sendMessage(user_id, inviteLink);
+        if (!inviteLink) {
+            console.error('Failed to create invite link');
+            return { success: false, error: 'Failed to create invite link' };
+        }
+
+        const messageText = `You have successfully subscribed to ${creator.username}! Click the link below to join the group:\n${inviteLink}`;
+        const messageSent = await sendMessage(user_id, messageText);
+        
+        return { 
+            success: true,
+            inviteLink: inviteLink,
+            messageSent: messageSent
+        };
     } catch (error) {
-        console.error('Error storing subscriber:', error);
-        return new NextResponse(JSON.stringify({ error: 'Failed to store subscriber' }), { status: 500 });
+        console.error('Error in onboarding:', error);
+        return { success: false, error: error.message };
     }
 }
 

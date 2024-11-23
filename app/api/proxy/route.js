@@ -27,132 +27,71 @@ async function handleProxyRequest(request) {
             return NextResponse.json({ error: 'Missing target URL' }, { status: 400 });
         }
 
-        // Allow payment provider domains and common payment processing domains
-        const allowedDomains = [
-            'ye-buna.com',
-            'stripe.com',
-            'js.stripe.com',
-            'm.stripe.com',
-            'api.stripe.com',
-            'checkout.stripe.com',
-            'hooks.stripe.com',
-            // CDN and resource domains
-            'cloudfront.net',
-            'd1a85gsjeabvpg.cloudfront.net',
-            'fonts.googleapis.com',
-            'fonts.gstatic.com',
-            'ajax.googleapis.com',
-            'cdn.jsdelivr.net',
-            'cdnjs.cloudflare.com',
-            // Stripe domains
-            'r.stripe.com',
-            'q.stripe.com',
-            'b.stripe.com',
-            'payment.chapa.co',
-            'chapa.co',
-            'checkout.chapa.co',
-            'api.chapa.co'
-        ];
-        
-        const targetDomain = new URL(targetUrl).hostname;
-        if (!allowedDomains.some(domain => targetDomain.endsWith(domain))) {
-            return NextResponse.json({ error: 'Domain not allowed' }, { status: 403 });
-        }
-
+        // Temporarily allow all domains for testing
         console.log('Proxying request to:', targetUrl);
+        const targetDomain = new URL(targetUrl).hostname;
+        console.log('Target domain:', targetDomain);
 
         // Create a clean headers object
         let cleanHeaders = {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.9',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         };
 
-        // Special handling for Stripe beacon requests
-        const isStripeBeacon = targetUrl.includes('r.stripe.com/b');
-        if (isStripeBeacon) {
-            // For beacon requests, we want to pass through all headers
-            cleanHeaders = Object.fromEntries(request.headers.entries());
-        } else {
-            // Safely copy headers from the request
-            for (const [key, value] of request.headers.entries()) {
-                // Skip problematic headers
-                if (!['host', 'connection', 'content-length', 'transfer-encoding'].includes(key.toLowerCase())) {
-                    try {
-                        // Validate header value
-                        if (typeof value === 'string' && value.length > 0) {
-                            cleanHeaders[key] = value;
-                        }
-                    } catch (e) {
-                        console.warn(`Skipping invalid header: ${key}`);
-                    }
-                }
+        // Copy all headers from the request except sensitive ones
+        for (const [key, value] of request.headers.entries()) {
+            if (!['host', 'connection', 'content-length', 'transfer-encoding'].includes(key.toLowerCase())) {
+                cleanHeaders[key] = value;
             }
-        }
-
-        // Add payment provider specific headers
-        if (targetDomain.includes('stripe.com')) {
-            cleanHeaders['Origin'] = request.headers.get('origin') || 'https://ye-buna.com';
-            cleanHeaders['Referer'] = request.headers.get('referer') || 'https://ye-buna.com/';
         }
 
         // Add target-specific headers
         cleanHeaders['Host'] = new URL(targetUrl).host;
         cleanHeaders['Origin'] = new URL(targetUrl).origin;
-        cleanHeaders['Referer'] = targetUrl;
 
-        console.log('Request headers:', cleanHeaders);
-
-        const proxyResponse = await axios({
-            method: request.method,
-            url: targetUrl,
-            headers: cleanHeaders,
-            data: ['POST', 'PUT', 'PATCH'].includes(request.method) ? await request.text() : undefined,
-            responseType: 'arraybuffer',
-            validateStatus: () => true,
-            timeout: 30000,
-            maxRedirects: 5,
-        });
-
-        console.log('Proxy response status:', proxyResponse.status);
-        console.log('Proxy response headers:', proxyResponse.headers);
-
-        const contentType = proxyResponse.headers['content-type'] || '';
-        
-        // If it's HTML content, filter out Stripe scripts
-        if (contentType.includes('text/html')) {
-            const responseText = proxyResponse.data.toString('utf-8');
-            
-            // Remove Stripe-related script tags
-            const filteredHtml = responseText.replace(
-                /<script[^>]*(?:stripe\.com|r\.stripe\.com|js\.stripe\.com)[^>]*>[\s\S]*?<\/script>/gi,
-                ''
-            );
-            
-            // Create new response with filtered HTML
-            return new NextResponse(filteredHtml, {
-                status: proxyResponse.status,
-                headers: {
-                    'Content-Type': 'text/html;charset=UTF-8',
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Allow-Credentials': 'true',
-                }
-            });
+        // Get request method and body
+        const method = request.method;
+        let body = null;
+        if (method !== 'GET' && method !== 'HEAD') {
+            body = await request.text();
         }
 
-        // For non-HTML responses, return as-is
-        return new NextResponse(proxyResponse.data, {
-            status: proxyResponse.status,
-            headers: {
-                'Content-Type': contentType,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': '*',
-                'Access-Control-Allow-Credentials': 'true',
-            }
+        console.log('Request headers:', cleanHeaders);
+        console.log('Request method:', method);
+
+        // Make the proxied request
+        const response = await axios({
+            method: method,
+            url: targetUrl,
+            headers: cleanHeaders,
+            data: body,
+            maxRedirects: 5,
+            validateStatus: null,
         });
+
+        console.log('Proxy response status:', response.status);
+
+        // Create response headers
+        const responseHeaders = {
+            'Content-Type': response.headers['content-type'] || 'text/plain',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': '*'
+        };
+
+        let content = response.data;
+        if (typeof content === 'string' && response.headers['content-type']?.includes('text/html')) {
+            content = rewriteUrls(content, targetUrl, request.url);
+        }
+
+        return new NextResponse(
+            typeof content === 'string' ? content : JSON.stringify(content),
+            {
+                status: response.status,
+                headers: responseHeaders
+            }
+        );
     } catch (error) {
         console.error('Proxy error:', error);
         

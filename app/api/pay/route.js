@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 
+export async function GET(request) {
+    // For testing, redirect to POST handler
+    return POST(request);
+}
+
 export async function POST(request) {
     try {
         const url = 'https://ye-buna.com/Pyrrho';

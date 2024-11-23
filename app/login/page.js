@@ -27,17 +27,25 @@ export default function LoginPage() {
     setError('')
     
     try {
+      console.log('Attempting login...');
       const response = await fetch('/api/auth', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ email, password, type: 'login' })
       })
+      console.log('Response received:', response.status);
       const data = await response.json()
+      console.log('Response data:', data);
+      
       if (data.error) {
         setError(data.error)
       } else {
         router.push('/dashboard/creator')
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
