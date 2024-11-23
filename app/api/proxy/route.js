@@ -30,10 +30,12 @@ async function handleProxyRequest(request) {
         // Allow payment provider domains and common payment processing domains
         const allowedDomains = [
             'ye-buna.com',
-            'chapa.co',
-            'checkout.chapa.co',
-            'api.chapa.co',
-            'payment.chapa.co',
+            'stripe.com',
+            'js.stripe.com',
+            'm.stripe.com',
+            'api.stripe.com',
+            'checkout.stripe.com',
+            'hooks.stripe.com',
             // CDN and resource domains
             'cloudfront.net',
             'd1a85gsjeabvpg.cloudfront.net',
@@ -43,132 +45,113 @@ async function handleProxyRequest(request) {
             'cdn.jsdelivr.net',
             'cdnjs.cloudflare.com',
             // Stripe domains
-            'stripe.com',
             'r.stripe.com',
-            'js.stripe.com',
-            'api.stripe.com',
-            'm.stripe.com',
-            'q.stripe.com'
+            'q.stripe.com',
+            'b.stripe.com',
+            'payment.chapa.co',
+            'chapa.co',
+            'checkout.chapa.co',
+            'api.chapa.co'
         ];
         
         const targetDomain = new URL(targetUrl).hostname;
-        const isDomainAllowed = allowedDomains.some(domain => 
-            targetDomain === domain || targetDomain.endsWith('.' + domain)
-        );
-
-        if (!isDomainAllowed) {
-            console.log('Blocked domain:', targetDomain);
-            console.log('Allowed domains:', allowedDomains);
-            return NextResponse.json({ 
-                error: 'Invalid payment provider domain', 
-                domain: targetDomain,
-                allowedDomains: allowedDomains
-            }, { status: 403 });
+        if (!allowedDomains.some(domain => targetDomain.endsWith(domain))) {
+            return NextResponse.json({ error: 'Domain not allowed' }, { status: 403 });
         }
 
         console.log('Proxying request to:', targetUrl);
 
-        // Add essential headers for payment provider
-        const customHeaders = {
-            ...Object.fromEntries(request.headers),
-            'Host': new URL(targetUrl).host,
-            'Origin': new URL(targetUrl).origin,
-            'Referer': targetUrl,
+        // Create a clean headers object
+        let cleanHeaders = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         };
 
-        // Remove problematic headers
-        delete customHeaders['content-length'];
-        delete customHeaders['host'];
-        delete customHeaders['connection'];
+        // Special handling for Stripe beacon requests
+        const isStripeBeacon = targetUrl.includes('r.stripe.com/b');
+        if (isStripeBeacon) {
+            // For beacon requests, we want to pass through all headers
+            cleanHeaders = Object.fromEntries(request.headers.entries());
+        } else {
+            // Safely copy headers from the request
+            for (const [key, value] of request.headers.entries()) {
+                // Skip problematic headers
+                if (!['host', 'connection', 'content-length', 'transfer-encoding'].includes(key.toLowerCase())) {
+                    try {
+                        // Validate header value
+                        if (typeof value === 'string' && value.length > 0) {
+                            cleanHeaders[key] = value;
+                        }
+                    } catch (e) {
+                        console.warn(`Skipping invalid header: ${key}`);
+                    }
+                }
+            }
+        }
 
-        console.log('Request headers:', customHeaders);
+        // Add payment provider specific headers
+        if (targetDomain.includes('stripe.com')) {
+            cleanHeaders['Origin'] = request.headers.get('origin') || 'https://ye-buna.com';
+            cleanHeaders['Referer'] = request.headers.get('referer') || 'https://ye-buna.com/';
+        }
+
+        // Add target-specific headers
+        cleanHeaders['Host'] = new URL(targetUrl).host;
+        cleanHeaders['Origin'] = new URL(targetUrl).origin;
+        cleanHeaders['Referer'] = targetUrl;
+
+        console.log('Request headers:', cleanHeaders);
 
         const proxyResponse = await axios({
             method: request.method,
             url: targetUrl,
-            headers: customHeaders,
+            headers: cleanHeaders,
             data: ['POST', 'PUT', 'PATCH'].includes(request.method) ? await request.text() : undefined,
             responseType: 'arraybuffer',
             validateStatus: () => true,
             timeout: 30000,
             maxRedirects: 5,
-            withCredentials: true
         });
 
         console.log('Proxy response status:', proxyResponse.status);
         console.log('Proxy response headers:', proxyResponse.headers);
 
-        const contentType = proxyResponse.headers['content-type'];
-        console.log('Response content type:', contentType);
-
-        let body = proxyResponse.data;
-
-        if (contentType) {
-            if (contentType.includes('text/html') || contentType.includes('application/json') || contentType.includes('text/javascript')) {
-                body = body.toString('utf-8');
-                console.log('Response body preview:', body.substring(0, 200));
-                
-                // Only rewrite URLs if it's HTML content
-                if (contentType.includes('text/html')) {
-                    body = rewriteUrls(body, targetUrl, request.url);
-                    console.log('Rewritten content preview:', body.substring(0, 200));
-                }
-                
-                // Monitor for payment status indicators
-                if (body.includes('payment_success') || 
-                    body.includes('transaction_completed') || 
-                    body.includes('thank you for your payment')) {
-                    console.log('Payment success detected in response');
-                }
-                if (body.includes('payment_failed') || 
-                    body.includes('transaction_failed') || 
-                    body.includes('payment error')) {
-                    console.log('Payment failure detected in response');
-                }
-            }
-        }
-
-        const headers = new Headers();
+        const contentType = proxyResponse.headers['content-type'] || '';
         
-        // Copy original headers except security headers
-        for (const [key, value] of Object.entries(proxyResponse.headers)) {
-            if (!['x-frame-options', 'content-security-policy', 'strict-transport-security'].includes(key.toLowerCase())) {
-                headers.append(key, value);
-            }
+        // If it's HTML content, filter out Stripe scripts
+        if (contentType.includes('text/html')) {
+            const responseText = proxyResponse.data.toString('utf-8');
+            
+            // Remove Stripe-related script tags
+            const filteredHtml = responseText.replace(
+                /<script[^>]*(?:stripe\.com|r\.stripe\.com|js\.stripe\.com)[^>]*>[\s\S]*?<\/script>/gi,
+                ''
+            );
+            
+            // Create new response with filtered HTML
+            return new NextResponse(filteredHtml, {
+                status: proxyResponse.status,
+                headers: {
+                    'Content-Type': 'text/html;charset=UTF-8',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Allow-Credentials': 'true',
+                }
+            });
         }
 
-        // Set security headers that allow iframe functionality while maintaining some protection
-        headers.set('Content-Security-Policy', `
-            default-src * data: blob: 'unsafe-inline' 'unsafe-eval';
-            script-src * 'unsafe-inline' 'unsafe-eval';
-            connect-src * 'unsafe-inline';
-            img-src * data: blob: 'unsafe-inline';
-            frame-src *;
-            style-src * 'unsafe-inline';
-        `.replace(/\s+/g, ' ').trim());
-
-        // Allow CORS
-        headers.set('Access-Control-Allow-Origin', '*');
-        headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        headers.set('Access-Control-Allow-Headers', '*');
-        headers.set('Access-Control-Allow-Credentials', 'true');
-
-        // Add cache control to prevent stale responses
-        headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-
-        // Set content type if not already set
-        if (!headers.get('content-type') && contentType) {
-            headers.set('content-type', contentType);
-        }
-
-        console.log('Final response headers:', Object.fromEntries(headers.entries()));
-
-        return new Response(body, {
+        // For non-HTML responses, return as-is
+        return new NextResponse(proxyResponse.data, {
             status: proxyResponse.status,
-            headers: headers,
+            headers: {
+                'Content-Type': contentType,
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': '*',
+                'Access-Control-Allow-Credentials': 'true',
+            }
         });
     } catch (error) {
         console.error('Proxy error:', error);

@@ -12,6 +12,11 @@ const PUBLIC_ROUTES = [
 // API routes that are needed for public functionality
 const PUBLIC_API_ROUTES = [
   '/api/get-early-access',
+  '/api/creator',
+  '/api/pay',
+  '/api/verify-payment-token',
+  '/api/store-subscriber',
+  '/api/proxy'
 ]
 
 // Static assets and system routes

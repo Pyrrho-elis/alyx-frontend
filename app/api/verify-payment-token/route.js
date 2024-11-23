@@ -7,10 +7,11 @@ export async function POST(req, res) {
     const { token, action, response } = await req.json();
 
 
+
     switch (action) {
         case 'verify':
             try {
-                const userData = jwt.verify(token, process.env.NEXT_PUBLIC_JWT_SECRET);
+                const userData = jwt.verify(token, process.env.SERVER_JWT_SECRET);
                 return NextResponse.json({ message: 'Token verified successfully', data: userData }, { status: 200 });
             } catch (error) {
                 return NextResponse.json({ error: error.message }, { status: 400 });
@@ -21,7 +22,7 @@ export async function POST(req, res) {
             }
             if (response.status === 1) {
                 // Successful payment
-                const userData = jwt.verify(token, process.env.NEXT_PUBLIC_JWT_SECRET);
+                const userData = jwt.verify(token, process.env.SERVER_JWT_SECRET);
                 const { user_id: userId, creator_id } = userData;
                 console.log('User ID:', userId);
                 console.log('Creator ID:', creator_id);
@@ -31,8 +32,8 @@ export async function POST(req, res) {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        user_id: userId,
-                        creator_id: creator_id
+                        userId,
+                        creator_id
                     })
                 });
                 if (!storeResponse.ok) {

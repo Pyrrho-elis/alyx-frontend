@@ -16,15 +16,32 @@ export default function IntegrationsPage() {
 
   // const data = useCreatorData();
   const { creator } = useUserContext();
-  const botToken = process.env.NEXT_PUBLIC_BOT_TOKEN;
+  const { user } = useUser();
 
-  //Change this when is everything is tabbed
-  const { user } = useUser()
+  const verifyBot = async () => {
+    try {
+      const response = await fetch('/api/bot');
+      const data = await response.json();
+      
+      if (data.ok) {
+        return data.botUsername;
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('Error verifying bot:', error);
+      return null;
+    }
+  };
 
   const fetchGroupInfo = async (creatorData) => {
     setLoading(true)
     try {
-      const response = await fetch(`https://api.telegram.org/bot${botToken}/getChat?chat_id=${creatorData.telegram_group_id}`, {
+      const botUsername = await verifyBot();
+      if (!botUsername) {
+        throw new Error('Failed to verify bot');
+      }
+      const response = await fetch(`https://api.telegram.org/bot${botUsername}/getChat?chat_id=${creatorData.telegram_group_id}`, {
         method: 'GET',
       });
       if (!response.ok) {
@@ -41,7 +58,12 @@ export default function IntegrationsPage() {
   };
 
   const handleAddBot = async () => {
-    window.location.href = "https://t.me/subzzSupportBot?start=setup_"
+    const botUsername = await verifyBot();
+    if (!botUsername) {
+      console.error('Failed to verify bot');
+      return;
+    }
+    window.location.href = `https://t.me/${botUsername}?start=setup_`
   }
 
   useEffect(() => {

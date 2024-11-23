@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/app/utils/supabase/server'
-import { cookies } from 'next/headers'
-import { headers } from 'next/headers'
+import { createClient } from '@supabase/supabase-js';
+import { headers } from 'next/headers';
+
+// Create a single supabase client for interacting with your database
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 // Rate limiting configuration
 const rateLimitMap = new Map();
@@ -90,12 +95,15 @@ function sanitizeUpdateData(data) {
 
 export async function GET(req, { params }) {
   const { username } = params;
+  console.log('GET /api/creator - Username:', username);
+
   if (!username) {
     return NextResponse.json({ error: 'Username is required' }, { status: 400 });
   }
 
   const headersList = headers();
   const ip = headersList.get('x-forwarded-for') || 'unknown';
+  console.log('Client IP:', ip);
   
   // Check rate limit for GET requests
   if (isRateLimited(ip, 'GET')) {
@@ -105,10 +113,10 @@ export async function GET(req, { params }) {
     );
   }
 
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
   try {
+    console.log('Querying Supabase for creator:', username);
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    
     const { data: creator, error } = await supabase
       .from('creators_page')
       .select('id, username, title, desc, tiers, perks, youtube_video_id, avatar_url, isActive')
@@ -116,17 +124,19 @@ export async function GET(req, { params }) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
+      console.error('Supabase error:', error);
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
     if (!creator) {
+      console.log('No creator found for username:', username);
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
     }
 
+    console.log('Creator found:', creator);
     return NextResponse.json(creator);
   } catch (error) {
-    // Log error internally but don't expose details
-    console.error('Error ID: ' + Date.now(), { type: 'GET_CREATOR_ERROR', username });
+    console.error('Error fetching creator:', error);
     return NextResponse.json({ error: 'Failed to fetch creator profile' }, { status: 500 });
   }
 }
@@ -146,7 +156,6 @@ export async function PUT(req, { params }) {
   }
 
   try {
-    const supabase = createClient(cookies());
     const validation = await validateUser(supabase, username);
     
     if (!validation.valid) {

@@ -56,7 +56,7 @@ async function onBoarding(creator_id, user_id, supabase) {
 
 const createInviteLink = async (group_id) => {
     try {
-        const botToken = process.env.NEXT_PUBLIC_BOT_TOKEN;
+        const botToken = process.env.BOT_TOKEN;
         const baseUrl = `https://api.telegram.org/bot${botToken}`;
         const expirationTimestamp = Math.floor(Date.now() / 1000) + 30 * 60;  // 30 minutes from now
         const response = await fetch(`${baseUrl}/createChatInviteLink`, {
@@ -84,7 +84,7 @@ const createInviteLink = async (group_id) => {
 
 const sendMessage = async (user_id, message) => {
     try {
-        const botToken = process.env.NEXT_PUBLIC_BOT_TOKEN;
+        const botToken = process.env.BOT_TOKEN;
         const baseUrl = `https://api.telegram.org/bot${botToken}`;
         const response = await fetch(`${baseUrl}/sendMessage`, {
             method: 'POST',
