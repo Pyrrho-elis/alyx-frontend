@@ -33,96 +33,43 @@ const validateUsername = (username) => {
 
 export async function POST(req) {
     try {
-        const cookieStore = cookies()
-        const supabase = createClient(cookieStore)
+        const cookieStore = cookies();
+        const supabase = createClient(cookieStore);
+        const adminClient = createAdminClient(cookieStore);
 
-        const { email, password, creator_name, username, type } = await req.json()
-        console.log(email, password, creator_name, username, type)
-
+        const { email, password, creator_name, username, type } = await req.json();
 
         if (type === 'login') {
-            console.log("logging in")
-            // Use regular client for initial login
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
                 email,
                 password,
-            })
-            if (error) {
-                console.error('Login error:', error);
-                return NextResponse.json({ error: error.message }, { 
-                    status: 400,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-            }
+            });
 
-            // Use admin client to check if user should be admin
-            const adminClient = createAdminClient(cookieStore)
-            
-            // Get current user metadata
-            const { data: { user: currentUser }, error: getUserError } = await adminClient.auth.admin.getUserById(data.user.id)
+            if (signInError) throw signInError;
+
+            // Get full user data including metadata using admin client
+            const { data: { user: userData }, error: getUserError } = await adminClient.auth.admin.getUserById(user.id);
             
             if (getUserError) {
-                console.error('Error getting user:', getUserError);
-                return NextResponse.json({ error: getUserError.message }, { 
-                    status: 500,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
+                console.error('Error fetching user data:', getUserError);
+                throw getUserError;
             }
 
-            // Only update metadata if needed (e.g., if user is an admin but metadata doesn't reflect it)
-            const isAdmin = email === 'naolm75@gmail.com' // Replace with your admin email
-            if (isAdmin && !currentUser.user_metadata?.is_admin) {
-                const { error: updateError } = await adminClient.auth.admin.updateUserById(
-                    data.user.id,
-                    {
-                        user_metadata: {
-                            ...currentUser.user_metadata,
-                            is_admin: true
-                        }
-                    }
-                )
+            console.log('User metadata:', userData.user_metadata);
 
-                if (updateError) {
-                    console.error('Error updating user metadata:', updateError);
-                } else {
-                    console.log('Successfully updated user metadata');
-                }
+            // Check whitelist status from user metadata
+            const isWhitelisted = userData.user_metadata?.is_whitelisted === true;
+            const isAdmin = userData.user_metadata?.is_admin === true;
 
-                // Sign in again to get fresh session
-                const { data: refreshedSession, error: refreshError } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                })
-
-                if (refreshError) {
-                    console.error('Error refreshing session:', refreshError);
-                    return NextResponse.json({ error: refreshError.message }, { 
-                        status: 400,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                }
-
-                return NextResponse.json({ session: refreshedSession.session }, { 
-                    status: 200,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
+            if (!isWhitelisted && !isAdmin) {
+                console.log('User not whitelisted:', user.id);
+                return NextResponse.json(
+                    { error: 'Not whitelisted' },
+                    { status: 403 }
+                );
             }
 
-            // If no updates needed, return original session
-            return NextResponse.json({ session: data.session }, { 
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
+            return NextResponse.json({ user: userData });
         }
         if (type === 'signup') {
             // Validate account number and username
