@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function PayPage() {
+function PayPageContent() {
     const [error, setError] = useState(null);
     const [status, setStatus] = useState('loading');
     const [userData, setUserData] = useState(null);
@@ -268,5 +268,13 @@ export default function PayPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function PayPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <PayPageContent />
+        </Suspense>
     );
 }
