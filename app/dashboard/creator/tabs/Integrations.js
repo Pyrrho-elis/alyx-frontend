@@ -15,7 +15,7 @@ export default function IntegrationsPage() {
   const router = useRouter();
 
   // const data = useCreatorData();
-  const { creator } = useUserContext();
+  const { creator, loading: creatorLoading } = useUserContext();
   const { user } = useUser();
 
   const verifyBot = async () => {
@@ -67,10 +67,10 @@ export default function IntegrationsPage() {
   }
 
   useEffect(() => {
-    if (creator.telegram_group_id) {
+    if (!creatorLoading && creator?.telegram_group_id) {
       fetchGroupInfo(creator);
     }
-  }, [creator.telegram_group_id]);
+  }, [creator, creatorLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,70 +99,52 @@ export default function IntegrationsPage() {
     }
   };
 
-  if (loading) {
-    <LoadingSkeleton />
-  }
-
   return (
-    <>{!creator.telegram_group_id ? (
-      <div className="max-w-md mx-auto mt-4 p-6 bg-gray-50 rounded-lg shadow-lg border-2">
-        <h2 className="text-2xl font-bold mb-4">Link Telegram Group</h2>
-
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label
-              htmlFor="integrationCode"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Integration Code
-            </label>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Integrations</h1>
+      
+      {creatorLoading ? (
+        <div>Loading...</div>
+      ) : creator?.telegram_group_id ? (
+        <div>
+          {loading ? (
+            <div>Loading group info...</div>
+          ) : groupInfo ? (
+            <div>
+              <h2>Linked Telegram Group</h2>
+              <p>Group Name: {groupInfo.result.title}</p>
+              {/* Add more group info display here */}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div>
+          <p className="mb-4">No Telegram group linked. Add our bot to your group to get started.</p>
+          <button
+            onClick={handleAddBot}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Add Bot to Group
+          </button>
+          
+          <form onSubmit={handleSubmit} className="mt-4">
             <input
-              id="integrationCode"
               type="text"
               value={integrationCode}
               onChange={(e) => setIntegrationCode(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Enter integration code"
-              required
+              className="border p-2 rounded mr-2"
             />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full py-2 px-4 rounded-md text-white 
-            ${isLoading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}
-            transition-colors duration-200`}
-          >
-            {isLoading ? 'Linking...' : 'Link Group'}
-          </button>
-        </form>
-
-        <div className="mt-4 text-sm text-gray-600 flex flex-col gap-3 items-center">
-          <p className='text-2xl font-bold'>To get an integration code:</p>
-          <ol className="list-decimal ml-5 mt-2">
-            <li>Add Subzz Bot to your Telegram group by clicking the button below</li>
-            <li>Make the bot an administrator</li>
-            <li>Copy the integration code sent by the bot</li>
-            <li>Paste it here to complete the linking</li>
-          </ol>
-          <div>
-            <Button variant="shine" onClick={handleAddBot}>
-              Add Subzz Bot to your Telegram group
-            </Button>
-          </div>
-          <p>Need Help? Book a demo with our support team</p>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+            >
+              {isLoading ? 'Linking...' : 'Link Group'}
+            </button>
+          </form>
         </div>
-      </div>
-    ) : (<>
-      <div className="max-w-md mx-auto p-6 rounded-lg shadow-md mt-4 bg-gray-50">
-        <p className='text-2xl font-semibold'>Linked To:</p>
-        <div className="flex bg-blue-500 w-fit justify-between items-center mb-2 mt-2 p-2 rounded-sm text-white font-bold cursor-pointer">
-          Telegram Group
-          <p>Title: {groupInfo?.result.title}</p>
-        </div>
-      </div>
-    </>)}
-    </>
-  )
+      )}
+    </div>
+  );
 }

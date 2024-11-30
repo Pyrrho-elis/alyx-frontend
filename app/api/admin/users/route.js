@@ -53,11 +53,19 @@ export async function POST(req) {
         const { data: { user: adminUser } } = await supabase.auth.getUser();
 
         // Get new user data from request
-        const { email, password, is_whitelisted = false } = await req.json();
+        const { email, password, username, creator_name, is_whitelisted = false } = await req.json();
 
-        if (!email || !password) {
+        if (!email || !password || !username || !creator_name) {
             return NextResponse.json(
-                { error: 'Email and password are required' },
+                { error: 'Email, password, username, and creator name are required' },
+                { status: 400 }
+            );
+        }
+
+        // Validate username
+        if (! /^[a-zA-Z0-9_]{5,16}$/.test(username.toString()) || /\s/.test(username)) {
+            return NextResponse.json(
+                { error: 'Username must be greater than 5 characters long, contain only letters, numbers, and underscores, and have no spaces.' },
                 { status: 400 }
             );
         }
@@ -69,7 +77,9 @@ export async function POST(req) {
             email_confirm: true,
             user_metadata: {
                 is_whitelisted,
-                created_by: adminUser.id
+                created_by: adminUser.id,
+                username: username.toLowerCase(),
+                creator_name
             }
         });
 
@@ -78,6 +88,38 @@ export async function POST(req) {
             return NextResponse.json(
                 { error: authError.message },
                 { status: 400 }
+            );
+        }
+
+        // Initialize creator's page with default values
+        const { error: creatorError } = await adminClient
+            .from('creators_page')
+            .insert({
+                id: authUser.user.id,
+                title: 'Welcome to the Creator Page',
+                desc: 'This is a test description for the creator page',
+                perks: JSON.stringify([{
+                    name: 'Perk 1',
+                    description: 'This is a test description for the first benefit'
+                }, {
+                    name: 'Perk 2',
+                    description: 'This is a test description for the second benefit'
+                }]),
+                username: username.toLowerCase(),
+                tiers: JSON.stringify([{
+                    name: "Tier 1",
+                    price: 1000,
+                    description: "This is a test description for the first tier"
+                }])
+            });
+
+        if (creatorError) {
+            console.error('Error initializing creator page:', creatorError);
+            // If creator page creation fails, delete the auth user
+            await adminClient.auth.admin.deleteUser(authUser.user.id);
+            return NextResponse.json(
+                { error: 'Failed to initialize creator page' },
+                { status: 500 }
             );
         }
 

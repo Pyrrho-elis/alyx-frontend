@@ -12,29 +12,54 @@ export default function AdminPage() {
     const [newUser, setNewUser] = useState({
         email: '',
         password: '',
+        username: '',
+        creator_name: '',
         is_whitelisted: false
     });
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await fetch('/api/admin/users');
-                const data = await response.json();
+    const [usernameError, setUsernameError] = useState('');
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to fetch users');
-                }
+    const validateUsername = (username) => {
+        if (!username) return { error: "Error: Username is required!" }
+        if (! /^[a-zA-Z0-9_]{5,16}$/.test(username.toString()) || /\s/.test(username)) {
+            return { error: "Username must be greater than 5 characters long, contain only letters, numbers, and underscores, and have no spaces." }
+        }
+        return username.toString().toLowerCase()
+    };
 
-                setUsers(data.users);
-                setError(null);
-            } catch (err) {
-                setError(err.message);
-                setUsers([]);
-            } finally {
-                setLoading(false);
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        if (name === 'username') {
+            const checkUsername = validateUsername(value);
+            if (checkUsername.error) {
+                setUsernameError(checkUsername.error);
+            } else {
+                setUsernameError('');
             }
-        };
+        }
+        setNewUser({ ...newUser, [name]: value });
+    };
 
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch('/api/admin/users');
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to fetch users');
+            }
+
+            setUsers(data.users);
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+            setUsers([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchUsers();
     }, []);
 
@@ -59,6 +84,8 @@ export default function AdminPage() {
             setNewUser({
                 email: '',
                 password: '',
+                username: '',
+                creator_name: '',
                 is_whitelisted: false
             });
             setShowCreateForm(false);
@@ -141,58 +168,80 @@ export default function AdminPage() {
                 </div>
 
                 {showCreateForm && (
-                    <div className="bg-white shadow sm:rounded-lg mb-6">
-                        <div className="px-4 py-5 sm:p-6">
-                            <h3 className="text-lg font-medium leading-6 text-gray-900">Create New User</h3>
-                            <form onSubmit={handleCreateUser} className="mt-5 space-y-4">
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                        Email
-                                    </label>
-                                    <Input
-                                        type="email"
-                                        id="email"
-                                        value={newUser.email}
-                                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                        Password
-                                    </label>
-                                    <Input
-                                        type="password"
-                                        id="password"
-                                        value={newUser.password}
-                                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex items-center">
-                                    <Input
-                                        type="checkbox"
-                                        id="whitelist"
-                                        checked={newUser.is_whitelisted}
-                                        onChange={(e) => setNewUser({ ...newUser, is_whitelisted: e.target.checked })}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <label htmlFor="whitelist" className="ml-2 block text-sm text-gray-900">
-                                        Whitelist User
-                                    </label>
-                                </div>
-                                <div className="flex justify-end">
-                                    <button
-                                        type="submit"
-                                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                    >
-                                        Create User
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                    <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
+                        <form onSubmit={handleCreateUser} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={newUser.email}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Password</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={newUser.password}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Username</label>
+                                <input
+                                    type="text"
+                                    name="username"
+                                    value={newUser.username}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                                {usernameError && (
+                                    <p className="text-red-500 text-sm mt-1">{usernameError}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Creator Name</label>
+                                <input
+                                    type="text"
+                                    name="creator_name"
+                                    value={newUser.creator_name}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    name="is_whitelisted"
+                                    checked={newUser.is_whitelisted}
+                                    onChange={(e) => setNewUser({ ...newUser, is_whitelisted: e.target.checked })}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <label className="ml-2 block text-sm text-gray-900">
+                                    Whitelist User
+                                </label>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={usernameError}
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400"
+                            >
+                                Create User
+                            </button>
+                        </form>
                     </div>
                 )}
 
@@ -206,6 +255,7 @@ export default function AdminPage() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Sign In</th>
@@ -216,6 +266,7 @@ export default function AdminPage() {
                                 {users.map((user) => (
                                     <tr key={user.id}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.email}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_whitelisted ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                                 {user.is_whitelisted ? 'Whitelisted' : 'Not Whitelisted'}

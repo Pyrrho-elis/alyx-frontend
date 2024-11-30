@@ -39,7 +39,7 @@ export default function CreatorPage() {
       <div className='flex flex-col justify-center gap-4 w-full max-w-md mx-auto p-4 mb-32 backdrop-blur-sm bg-gray-100 border-solid border-2 border-gray-300 rounded-lg shadow-2xl'>
         <div className='flex flex-col justify-center items-center m-4 h-full'>
           <Avatar className="w-64 h-64">
-            <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
+            <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${creatorData.avatarUrl}`} alt="User Profile" />
             <AvatarFallback>Avatar</AvatarFallback>
           </Avatar>
         </div>
@@ -67,7 +67,7 @@ export default function CreatorPage() {
           Features and Perks
         </label>
         <div name='perks' className='flex flex-col items-center space-y-2'>
-          {JSON.parse(creatorData.perks).map((perk, index) => (
+          {creatorData.perks.map((perk, index) => (
             <Card key={index} className="w-full px-4 mb-2">
               <CardHeader>
                 <CardTitle>

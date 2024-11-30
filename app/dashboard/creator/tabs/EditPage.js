@@ -73,14 +73,44 @@ export default function EditPage() {
     }
 
     return (
-        <div className='flex justify-around w-full items-center'>
-            <div className='flex flex-col justify-center min-h-screen py-8 px-4'>
+        <div className='flex justify-between w-full'>
+            <div className='flex-1 overflow-y-auto scrollbar-hidden py-8 px-16 max-h-screen'>
                 <h1 className='text-4xl font-bold mb-6'>Design Your Page</h1>
                 {loading ? <div className='space-y-4 w-full max-w-md'><LoadingSkeleton /></div> : (
                     <form onSubmit={handleSave} className='space-y-4 w-full max-w-md'>
                         <AvatarUpload avatarUrl={avatarUrl} userId={id} />
-                        {error && <p className='text-red-500'>{error}</p>}
-                        {success && <p className='text-green-500'>Your page has been updated successfully!</p>}
+                        {error && (
+                            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md shadow-sm animate-fade-in">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-red-700">
+                                            {error}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {success && (
+                            <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-md shadow-sm animate-fade-in">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-green-700">
+                                            Your page has been updated successfully!
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
                             Title
                         </label>
@@ -200,57 +230,56 @@ export default function EditPage() {
                     </form>
                 )}
             </div>
-            <div className='hidden lg:block w-full max-w-[390px] overflow-scroll'>
-                <div className="flex flex-col sticky top-16 overflow-scroll">
-                    <Card className="overflow-scroll">
-                        <CardHeader>
-                            <CardTitle className="flex flex-col justify-center items-center gap-4">
-                                <Avatar className="w-32 h-32">
-                                    <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
-                                    <AvatarFallback>Avatar</AvatarFallback>
-                                </Avatar>
-                                <div className='flex flex-col justify-center items-center'>
-                                    <p className="text-4xl font-bold mb-2 text-blue-500">{title}</p>
-                                    <p className='text-sm text-gray-500'>{description}</p>
+            <div className='hidden lg:block w-1/2 scrollbar-hidden h-screen sticky top-0 right-0 bg-gray-50'>
+                <div className="flex flex-col w-full justify-center items-center h-full py-8 px-4">
+                    <Card className="bg-white w-2/3 shadow-lg h-full">
+                        <div className="h-full overflow-y-auto scrollbar-hidden">
+                            <CardHeader>
+                                <CardTitle className="flex flex-col justify-center items-center gap-4">
+                                    <Avatar className="w-32 h-32">
+                                        <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`} alt="User Profile" />
+                                        <AvatarFallback>Avatar</AvatarFallback>
+                                    </Avatar>
+                                    <div className='flex flex-col justify-center items-center'>
+                                        <p className="text-4xl font-bold mb-2 text-blue-500">{title}</p>
+                                        <p className='text-sm text-gray-500'>{description}</p>
+                                    </div>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-4 justify-center">
+                                <div className="grid grid-cols-2">
+                                    {Object.keys(tiers).map((key) => (
+                                        <Card key={key} className="px-2 border-solid border-2 border-sky-500 ">
+                                            <CardHeader>
+                                                <CardTitle>
+                                                    <span className="text-lg font-semibold text-blue-500">{tiers[key].name}</span>
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    <span className="text-gray-600 font-bold">Br {tiers[key].price} /month</span>
+                                                </CardDescription>
+                                            </CardHeader>
+                                        </Card>
+                                    ))
+                                    }
                                 </div>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4 justify-center">
-                            <div className="grid grid-cols-2">
-                                {Object.keys(tiers).map((key) => (
-                                    <Card key={key} className="px-2 border-solid border-2 border-sky-500 ">
-                                        <CardHeader>
+                                <span className='text-xl'>Inside the community:</span>
+                                {perks.map((perk, index) => (
+                                    <div key={index}>
+                                        <Card className="w-full p-4 mb-2 justify-center">
                                             <CardTitle>
-                                                <span className="text-lg font-semibold text-blue-500">{tiers[key].name}</span>
+                                                <span className="text-lg font-semibold mb-2 text-blue-500">{perk.name}</span>
                                             </CardTitle>
                                             <CardDescription>
-                                                <span className="text-gray-600 font-bold">Br {tiers[key].price} /month</span>
+                                                <span className="text-gray-600 font-bold">{perk.desc}</span>
                                             </CardDescription>
-                                        </CardHeader>
-                                    </Card>
-                                ))
-                                }
-                            </div>
-                            <span className='text-xl'>Inside the community:</span>
-                            {perks.map((perk, index) => (
-                                <div key={index}>
-                                    <Card className="w-full p-4 mb-2 justify-center">
-                                        <CardTitle>
-                                            <span className="text-lg font-semibold mb-2 text-blue-500">{perk.name}</span>
-                                        </CardTitle>
-                                        <CardDescription>
-                                            <span className="text-gray-600 font-bold">{perk.desc}</span>
-                                        </CardDescription>
-                                    </Card>
-                                </div>
-                            ))}
-                            {youtubeUrl && youtubeUrl.length > 0
-                                ? <div className="rounded-sm">
-                                    <YoutubeEmbed videoId={youtubeUrl} />
-                                </div>
-                                : <></>
-                            }
-                        </CardContent>
+                                        </Card>
+                                    </div>
+                                ))}
+                                {youtubeUrl && extractYoutubeId(youtubeUrl) && (
+                                    <YoutubeEmbed videoId={extractYoutubeId(youtubeUrl)} />
+                                )}
+                            </CardContent>
+                        </div>
                     </Card>
                 </div>
             </div>

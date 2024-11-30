@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
+import { createClient } from '@/app/utils/supabase/server';
+import { cookies, headers } from 'next/headers';
 
 // Create a single supabase client for interacting with your database
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const createServerSupabase = (cookieStore) => {
+  return createClient(cookieStore);
+};
 
 // Rate limiting configuration
 const rateLimitMap = new Map();
@@ -17,7 +16,15 @@ const MAX_REQUESTS = {
 };
 
 // Allowed fields for update
-const ALLOWED_FIELDS = ['title', 'desc', 'tiers', 'perks', 'youtube_video_id', 'isActive'];
+const ALLOWED_FIELDS = [
+  'title', 
+  'desc', 
+  'tiers', 
+  'perks', 
+  'youtube_video_id', 
+  'isActive',
+  'avatar_url',
+];
 
 function isRateLimited(ip, method) {
   const now = Date.now();
@@ -44,28 +51,35 @@ async function validateUser(supabase, username) {
   try {
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return { valid: false, error: 'Unauthorized' };
+    if (authError) {
+      console.error('Auth error:', authError);
+      return { valid: false, error: 'Unauthorized - Auth Error' };
     }
-
-    // Check if this username matches the user's username in metadata
-    if (username !== user.user_metadata?.username) {
-      return { valid: false, error: 'Insufficient permissions' };
+    if (!user) {
+      console.error('No user found');
+      return { valid: false, error: 'Unauthorized - No User' };
     }
 
     // For existing profiles, verify ownership
     const { data: profile, error: profileError } = await supabase
       .from('creators_page')
-      .select('id, username')
+      .select('id')
       .eq('username', username)
       .single();
 
-    if (profileError?.code === 'PGRST116') {
-      // Profile doesn't exist yet - this is OK for new users
-      return { valid: true, user, profile: null };
+    if (profileError) {
+      if (profileError.code === 'PGRST116') {
+        // Profile doesn't exist yet - this is OK for new users
+        return { valid: true, user, profile: null };
+      }
+      console.error('Profile error:', profileError);
+      return { valid: false, error: 'Failed to verify profile' };
     }
 
+    // Check if this username matches the user's profile
     if (profile && profile.id !== user.id) {
+      console.log('Profile user ID:', profile.user_id);
+      console.log('User ID:', user.id);
       return { valid: false, error: 'Insufficient permissions' };
     }
 
@@ -80,8 +94,11 @@ function sanitizeUpdateData(data) {
   const sanitized = {};
   for (const field of ALLOWED_FIELDS) {
     if (data[field] !== undefined) {
-      // Basic XSS prevention for string fields
-      if (typeof data[field] === 'string') {
+      if (field === 'tiers' || field === 'perks') {
+        // These fields should already be parsed as objects
+        sanitized[field] = data[field];
+      } else if (typeof data[field] === 'string') {
+        // Basic XSS prevention for string fields
         sanitized[field] = data[field]
           .replace(/[<>]/g, '') // Remove < and > to prevent HTML injection
           .trim();
@@ -103,20 +120,18 @@ export async function GET(req, { params }) {
 
   const headersList = headers();
   const ip = headersList.get('x-forwarded-for') || 'unknown';
-  console.log('Client IP:', ip);
   
   // Check rate limit for GET requests
   if (isRateLimited(ip, 'GET')) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again later.' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
   }
 
   try {
     console.log('Querying Supabase for creator:', username);
     console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
     
+    const cookieStore = cookies();
+    const supabase = createServerSupabase(cookieStore);
     const { data: creator, error } = await supabase
       .from('creators_page')
       .select('id, username, title, desc, tiers, perks, youtube_video_id, avatar_url, isActive')
@@ -156,31 +171,35 @@ export async function PUT(req, { params }) {
   }
 
   try {
+    const cookieStore = cookies();
+    const supabase = createServerSupabase(cookieStore);
     const validation = await validateUser(supabase, username);
     
     if (!validation.valid) {
+      console.error('Validation failed:', validation.error);
       return NextResponse.json({ error: validation.error }, { status: 403 });
     }
 
-    const data = await req.json();
+    let data;
+    try {
+      data = await req.json();
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    // data.updated_at = new Date().toISOString();
+    
     const sanitizedData = sanitizeUpdateData(data);
 
     if (Object.keys(sanitizedData).length === 0) {
-      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'No valid fields to update',
+        allowed: ALLOWED_FIELDS 
+      }, { status: 400 });
     }
 
-    // Check if the record exists first
-    const { data: existingData } = await supabase
-      .from('creators_page')
-      .select('*')
-      .eq('username', username)
-      .single();
-    
-    if (!existingData) {
-      return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
-    }
-
-    const { error: updateError } = await supabase
+    const { data: updateData, error: updateError } = await supabase
       .from('creators_page')
       .update(sanitizedData)
       .eq('username', username)
@@ -189,12 +208,23 @@ export async function PUT(req, { params }) {
 
     if (updateError) {
       console.error('Database error:', updateError);
-      return NextResponse.json({ error: 'Failed to update data', details: updateError.message }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Failed to update data',
+        details: updateError.message,
+        code: updateError.code
+      }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      data: updateData
+    });
   } catch (error) {
     console.error('PUT error:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 });
   }
 }

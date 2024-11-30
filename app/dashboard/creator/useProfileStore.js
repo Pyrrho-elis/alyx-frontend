@@ -68,7 +68,7 @@ const useProfileStore = create((set, get) => ({
   id: '',
   avatarUrl: null,
   loading: true,
-  error: '',
+  error: null,
   success: false,
   creatorData: null,
 
@@ -87,7 +87,7 @@ const useProfileStore = create((set, get) => ({
   },
 
   fetchCreatorData: async (username) => {
-    set({ loading: true, error: '' });
+    set({ loading: true, error: null });
     try {
       const response = await fetch(`/api/creator/${username}`, {
         credentials: 'include', // Include cookies for CSRF
@@ -101,32 +101,41 @@ const useProfileStore = create((set, get) => ({
       }
 
       const data = await response.json();
+      console.log('Creator found:', data);  // Debug log
       
-      const parsedTiers = safeJSONParse(data.tiers, { "0": { name: '', price: '' } });
-      const parsedPerks = safeJSONParse(data.perks, [{ name: '', desc: '' }]);
+      // Parse tiers if it's a string, otherwise use as is
+      const parsedTiers = typeof data.tiers === 'string' 
+        ? safeJSONParse(data.tiers, { "0": { name: '', price: '' } })
+        : data.tiers || { "0": { name: '', price: '' } };
 
-      // Validate parsed data
-      const validatedData = {
+      // Handle perks - ensure it's an array with the correct structure
+      let parsedPerks = data.perks;
+      if (typeof data.perks === 'string') {
+        parsedPerks = safeJSONParse(data.perks, [{ name: '', desc: '' }]);
+      }
+      if (!Array.isArray(parsedPerks)) {
+        parsedPerks = [{ name: '', desc: '' }];
+      }
+
+      // Set the state
+      set({
         creatorData: data,
         id: data.id || '',
         title: data.title || '',
-        tiers: parsedTiers,
+        loading: false,
         description: data.desc || '',
-        perks: Array.isArray(parsedPerks) ? parsedPerks : [{ name: '', desc: '' }],
+        tiers: parsedTiers,
+        perks: parsedPerks,
         youtubeUrl: data.youtube_video_id ? `https://www.youtube.com/watch?v=${data.youtube_video_id}` : '',
-      };
+        error: null
+      });
 
-      try {
-        ProfileSchema.parse(validatedData);
-        set(validatedData);
-      } catch (validationError) {
-        console.error('Validation Error:', validationError);
-        throw new Error('ValidationError');
-      }
     } catch (error) {
-      set({ error: sanitizeErrorMessage(error) });
-    } finally {
-      set({ loading: false });
+      console.error('Error fetching creator data:', error);
+      set({ 
+        error: sanitizeErrorMessage(error),
+        loading: false
+      });
     }
   },
 
@@ -147,45 +156,30 @@ const useProfileStore = create((set, get) => ({
   },
 
   handleTierChange: (key, field, value) => {
-    try {
-      const currentTiers = get().tiers;
-      const updatedTier = {
-        ...currentTiers[key],
-        [field]: field === 'price' ? value.replace(/[^\d.]/g, '').slice(0, 10) : value.slice(0, 100)
-      };
+    const currentTiers = get().tiers;
+    const updatedTier = {
+      ...currentTiers[key],
+      [field]: field === 'price' ? value.replace(/[^\d.]/g, '').slice(0, 10) : value.slice(0, 100)
+    };
 
-      // Validate the updated tier
-      TierSchema.parse(updatedTier);
-
-      set({
-        tiers: {
-          ...currentTiers,
-          [key]: updatedTier
-        }
-      });
-    } catch (error) {
-      console.error('Tier validation error:', error);
-      // Don't update state if validation fails
-    }
+    set({
+      tiers: {
+        ...currentTiers,
+        [key]: updatedTier
+      },
+      error: null
+    });
   },
 
   handlePerkChange: (index, field, value) => {
-    try {
-      const maxLength = field === 'desc' ? 500 : 100;
-      const sanitizedValue = value.slice(0, maxLength);
-      
-      const perks = get().perks.map((perk, i) =>
-        i === index ? { ...perk, [field]: sanitizedValue } : perk
-      );
-
-      // Validate the updated perk
-      PerkSchema.parse(perks[index]);
-      
-      set({ perks });
-    } catch (error) {
-      console.error('Perk validation error:', error);
-      // Don't update state if validation fails
-    }
+    const maxLength = field === 'desc' ? 500 : 100;
+    const sanitizedValue = value.slice(0, maxLength);
+    
+    const perks = get().perks.map((perk, i) =>
+      i === index ? { ...perk, [field]: sanitizedValue } : perk
+    );
+    
+    set({ perks, error: null });
   },
 
   addPerk: () => {
@@ -203,47 +197,58 @@ const useProfileStore = create((set, get) => ({
   },
 
   handleSubmit: async (username) => {
-    const { title, tiers, description, perks, youtubeUrl } = get();
-    const youtubeId = validateYoutubeUrl(youtubeUrl);
-
+    set({ loading: true, error: null });
     try {
-      // Validate all data before submission
-      const profileData = {
-        title,
-        tiers,
-        description,
-        perks,
-        youtubeUrl
-      };
+      const state = get();
+      const { title, tiers, description: desc, perks, youtubeUrl } = state;
 
-      ProfileSchema.parse(profileData);
+      // Extract YouTube video ID if URL is present
+      let youtube_video_id = null;
+      if (youtubeUrl) {
+        const videoId = extractYoutubeId(youtubeUrl);
+        if (videoId) {
+          youtube_video_id = videoId;
+        }
+      }
 
       const response = await fetch(`/api/creator/${username}`, {
         method: 'PUT',
-        credentials: 'include', // Include cookies for CSRF
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: JSON.stringify({
           title,
-          tiers: JSON.stringify(tiers),
-          desc: description,
-          perks: JSON.stringify(perks),
-          youtube_video_id: youtubeId,
+          desc,
+          tiers,  // Send as is, API will handle stringification
+          perks,  // Send as is, API will handle stringification
+          youtube_video_id
         }),
       });
 
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to update creator data');
+        throw new Error(responseData.error || responseData.details || 'Failed to update creator data');
       }
 
-      const updatedCreatorData = await response.json();
-      set({ creatorData: updatedCreatorData });
-      get().setSuccessWithTimeout(true);
+      set({ 
+        creatorData: responseData.data,
+        loading: false,
+        error: null,
+        success: true
+      });
+
+      setTimeout(() => {
+        set({ success: false });
+      }, 3000);
+
     } catch (error) {
-      console.error('Error updating creator data:', error);
-      set({ error: sanitizeErrorMessage(error) });
+      console.error('Error updating creator:', error);
+      set({ 
+        error: sanitizeErrorMessage(error),
+        loading: false
+      });
     }
   },
 }));
