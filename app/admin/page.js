@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '../utils/supabase/client';
+import { Input } from '@/components/ui/input';
 
 export default function AdminPage() {
     const [users, setUsers] = useState([]);
@@ -148,7 +149,7 @@ export default function AdminPage() {
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                         Email
                                     </label>
-                                    <input
+                                    <Input
                                         type="email"
                                         id="email"
                                         value={newUser.email}
@@ -161,7 +162,7 @@ export default function AdminPage() {
                                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                         Password
                                     </label>
-                                    <input
+                                    <Input
                                         type="password"
                                         id="password"
                                         value={newUser.password}
@@ -171,7 +172,7 @@ export default function AdminPage() {
                                     />
                                 </div>
                                 <div className="flex items-center">
-                                    <input
+                                    <Input
                                         type="checkbox"
                                         id="whitelist"
                                         checked={newUser.is_whitelisted}

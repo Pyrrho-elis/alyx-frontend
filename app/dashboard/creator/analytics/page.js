@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/app/hooks/useUser';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, DollarSign, Users, TrendingUp, Wallet } from 'lucide-react';
-import CustomButton from '@/app/components/CustomButton';
+import { CustomButton } from '@/components/ui/custom-button';
 import {
     Table,
     TableBody,
@@ -14,7 +14,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-export default function Analytics() {
+export default function AnalyticsPage() {
     const { user } = useUser();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -22,15 +22,12 @@ export default function Analytics() {
     const [withdrawing, setWithdrawing] = useState(false);
 
     useEffect(() => {
-        if (user?.user_metadata?.username) {
-            fetchAnalytics(user.user_metadata.username);
-        }
+        fetchAnalytics();
     }, [user]);
 
-    const fetchAnalytics = async (username) => {
+    const fetchAnalytics = async () => {
         try {
-            const response = await fetch(`/api/analytics/revenue?creator_id=${username}`);
-            console.log(`/api/analytics/revenue?creator_id=${username}`)
+            const response = await fetch(`/api/analytics/revenue?creator_id=${user.id}`);
             if (!response.ok) throw new Error('Failed to fetch analytics');
             const data = await response.json();
             setAnalytics(data);
@@ -42,7 +39,7 @@ export default function Analytics() {
     };
 
     const handleWithdraw = async () => {
-        if (!analytics?.available_balance || !user?.user_metadata?.username) return;
+        if (!analytics?.available_balance) return;
         
         setWithdrawing(true);
         try {
@@ -50,7 +47,7 @@ export default function Analytics() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    creator_id: user.user_metadata.username,
+                    creator_id: user.id,
                     amount: analytics.available_balance
                 })
             });
@@ -58,21 +55,13 @@ export default function Analytics() {
             if (!response.ok) throw new Error('Failed to process withdrawal');
             
             // Refresh analytics after withdrawal
-            await fetchAnalytics(user.user_metadata.username);
+            await fetchAnalytics();
         } catch (error) {
             setError(error.message);
         } finally {
             setWithdrawing(false);
         }
     };
-
-    if (!user) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="w-8 h-8 animate-spin" />
-            </div>
-        );
-    }
 
     if (loading) {
         return (
@@ -107,7 +96,7 @@ export default function Analytics() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            ${analytics?.total_revenue?.toFixed(2) || '0.00'}
+                            ${analytics?.total_revenue?.toFixed(2)}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Lifetime earnings
@@ -125,7 +114,7 @@ export default function Analytics() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            ${analytics?.monthly_revenue?.toFixed(2) || '0.00'}
+                            ${analytics?.monthly_revenue?.toFixed(2)}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Last 30 days
@@ -143,7 +132,7 @@ export default function Analytics() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            ${analytics?.available_balance?.toFixed(2) || '0.00'}
+                            ${analytics?.available_balance?.toFixed(2)}
                         </div>
                         <CustomButton 
                             onClick={handleWithdraw}
@@ -173,7 +162,7 @@ export default function Analytics() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {analytics?.subscriber_count || '0'}
+                            {analytics?.subscriber_count}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Current members
@@ -198,7 +187,7 @@ export default function Analytics() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {analytics?.recent_transactions?.map((transaction) => (
+                            {analytics?.recent_transactions.map((transaction) => (
                                 <TableRow key={transaction.id}>
                                     <TableCell>
                                         {new Date(transaction.created_at).toLocaleDateString()}
@@ -207,19 +196,13 @@ export default function Analytics() {
                                         {transaction.event_type}
                                     </TableCell>
                                     <TableCell>
-                                        ${transaction.creator_share?.toFixed(2)}
+                                        ${transaction.creator_share.toFixed(2)}
                                     </TableCell>
                                     <TableCell className="capitalize">
                                         {transaction.status}
                                     </TableCell>
                                 </TableRow>
-                            )) || (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="text-center">
-                                        No transactions yet
-                                    </TableCell>
-                                </TableRow>
-                            )}
+                            ))}
                         </TableBody>
                     </Table>
                 </CardContent>

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/app/utils/supabase/server";
 import { cookies } from "next/headers";
 
+const PLATFORM_FEE = 0.25; // 25% platform fee (20% platform + 5% processing)
+
 export async function POST(req) {
     const cookieStore = cookies()
     const supabase = createClient(cookieStore)
@@ -10,6 +12,28 @@ export async function POST(req) {
     console.log('Storing subscriber:', { user_id, creator_id });
 
     try {
+        // Get creator's tiers data
+        const { data: creator, error: creatorError } = await supabase
+            .from('creators_page')
+            .select('tiers')
+            .eq('username', creator_id)
+            .single();
+
+        if (creatorError) {
+            console.error('Error fetching creator tier:', creatorError);
+            throw creatorError;
+        }
+
+        if (!creator?.tiers) {
+            throw new Error('Creator tiers not set');
+        }
+
+        // Get the price from the first tier
+        const subscriptionPrice = JSON.parse(creator.tiers)[0].price;
+        if (!subscriptionPrice) {
+            throw new Error('Creator tier price not set');
+        }
+
         // First check if there's already an active subscription
         const { data: existingSubs, error: checkError } = await supabase
             .from('subscriptions')
@@ -66,6 +90,32 @@ export async function POST(req) {
         }
 
         console.log('Created new subscription:', subscription);
+
+        // Create revenue event for the subscription
+        const creatorShare = subscriptionPrice * (1 - PLATFORM_FEE);
+        const { error: revenueError } = await supabase
+            .from('revenue_events')
+            .insert({
+                creator_id: creator_id,
+                amount: subscriptionPrice,
+                creator_share: creatorShare,
+                platform_fee: subscriptionPrice * PLATFORM_FEE,
+                event_type: 'subscription',
+                status: 'available',
+                created_at: new Date().toISOString(),
+                // subscription_id: subscription.id,
+                metadata: {
+                    subscriber_id: user_id,
+                    subscription_id: subscription.id,
+                    subscription_period: '1 month',
+                    tier_price: subscriptionPrice
+                }
+            });
+
+        if (revenueError) {
+            console.error('Error creating revenue event:', revenueError);
+            throw revenueError;
+        }
 
         // Start onboarding process
         const onboardingResult = await onBoarding(creator_id, user_id, supabase);
