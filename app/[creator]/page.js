@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link';
 import {
@@ -7,16 +7,14 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import YouTubeEmbed from '../components/YoutubeEmbed'
 import LoadingSkeleton from '@/app/components/LoadingSkeleton'
-import useProfileStore from '../dashboard/creator/useProfileStore';
+import { useCreator } from '../hooks/useCreator'
 
 export default function CreatorPage() {
   const { creator } = useParams();
-  const { fetchCreatorData, fetchAvatarUrl, creatorData, tiers, loading, error, youtubeVideoId, avatarUrl } = useProfileStore();
 
   const validateUsername = (username) => {
     if (!username) throw 'Error: Username is required!'
@@ -25,43 +23,38 @@ export default function CreatorPage() {
   }
 
   const creatorUsername = validateUsername(creator)
-
-  useEffect(() => {
-    fetchCreatorData(creatorUsername);
-    fetchAvatarUrl();
-  }, [creator]);
+  const { creator: creatorData, loading, error } = useCreator({ username: creatorUsername });
 
   if (loading) return <div className='flex flex-col justify-center gap-4 w-full mx-auto p-4 mb-16'><LoadingSkeleton /></div>;
   if (error) return <div>Error: {error}</div>;
   if (!creatorData) return <div>Creator not found</div>;
+
   return (
     <div className='absolute inset-0 h-fit bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem] shadow-lg p-4'>
       <div className='flex flex-col justify-center gap-4 w-full max-w-md mx-auto p-4 mb-32 backdrop-blur-sm bg-gray-100 border-solid border-2 border-gray-300 rounded-lg shadow-2xl'>
         <div className='flex flex-col justify-center items-center m-4 h-full'>
           <Avatar className="w-64 h-64">
-            <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${creatorData.avatarUrl}`} alt="User Profile" />
-            <AvatarFallback>Avatar</AvatarFallback>
+            <AvatarImage src={`https://cbaoknlorxoueainhdxq.supabase.co/storage/v1/object/public/avatars/${creatorData.avatar_url}`} alt={`${creatorData.username}'s avatar`} />
+            <AvatarFallback>{creatorData.username?.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
         <div className='flex flex-col justify-center items-center m-4'>
-          <p className='text-4xl font-bold'>{creatorData.title}</p>
-          <p className='text-sm text-gray-500'>{creatorData.desc}</p>
+          <p className='text-3xl text-center mb-2 font-bold'>{creatorData.title}</p>
+          <p className='text-sm text-gray-500 text-center'>{creatorData.desc}</p>
         </div>
         <div className='grid grid-cols-2'>
-
-          {Object.keys(tiers).map((key) => (
+          {Object.keys(creatorData.tiers || {}).map((key) => (
             <Card key={key} className="px-2 border-solid border-2 border-sky-500 ">
               <CardHeader>
                 <CardTitle>
-                  <span className="text-lg font-semibold text-blue-500">{tiers[key].name}</span>
+                  <span className="text-lg font-semibold text-blue-500">{creatorData.tiers[key].name}</span>
                 </CardTitle>
                 <CardDescription>
-                  <span className="text-gray-600 font-bold">Br {tiers[key].price} /month</span>
+                  <span className="text-gray-600 font-bold">Br {creatorData.tiers[key].price} /month</span>
                 </CardDescription>
               </CardHeader>
             </Card>
-          ))
-          }
+          ))}
         </div>
         <label htmlFor="perks" className="block text-gray-700 text-sm font-bold mb-2">
           Features and Perks
@@ -81,7 +74,7 @@ export default function CreatorPage() {
           ))}
         </div>
         <p className='text-sm text-gray-500'>{creatorData.description}</p>
-        <YouTubeEmbed videoId={youtubeVideoId} />
+        <YouTubeEmbed videoId={creatorData.youtube_video_id} />
         <div className='flex flex-col justify-center items-center'>
           <p className='text-sm text-gray-500'>@{creatorData.username}</p>
           <p>powered by <Link href='/' className='text-blue-500 hover:underline'>Subzz</Link></p>
@@ -94,12 +87,10 @@ export default function CreatorPage() {
           <>
             <Button asChild variant="gooeyRight" className='bg-blue-500 text-center text-lg font-bold text-white w-full max-w-lg h-16 py-2 rounded-2xl hover:bg-blue-700'>
               <Link href={`https://t.me/subzzSupportBot?start=sub_${creator}`} className='bg-blue-500 text-center text-lg font-bold text-white w-full max-w-sm py-2 rounded-md hover:bg-blue-700'>Subscribe</Link>
-              {/* <Link  href={`/${creator}/subscribe?tier=${JSON.parse(creatorData.tiers)[0].price}`} className='bg-blue-500 text-center text-lg font-bold text-white w-full max-w-sm py-2 rounded-md hover:bg-blue-700'>Subscribe</Link> */}
             </Button>
-
           </>
         )}
       </div>
     </div>
-  )
+  );
 }

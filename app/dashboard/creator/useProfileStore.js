@@ -67,6 +67,7 @@ const useProfileStore = create((set, get) => ({
   youtubeUrl: '',
   id: '',
   avatarUrl: null,
+  telegram_group_id: null,
   loading: true,
   error: null,
   success: false,
@@ -101,7 +102,6 @@ const useProfileStore = create((set, get) => ({
       }
 
       const data = await response.json();
-      console.log('Creator found:', data);  // Debug log
       
       // Parse tiers if it's a string, otherwise use as is
       const parsedTiers = typeof data.tiers === 'string' 
@@ -127,6 +127,8 @@ const useProfileStore = create((set, get) => ({
         tiers: parsedTiers,
         perks: parsedPerks,
         youtubeUrl: data.youtube_video_id ? `https://www.youtube.com/watch?v=${data.youtube_video_id}` : '',
+        telegram_group_id: data.telegram_group_id || null,
+        avatarUrl: data.avatar_url || null,
         error: null
       });
 
@@ -200,7 +202,7 @@ const useProfileStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const state = get();
-      const { title, tiers, description: desc, perks, youtubeUrl } = state;
+      const { title, tiers, description: desc, perks, youtubeUrl, telegram_group_id } = state;
 
       // Extract YouTube video ID if URL is present
       let youtube_video_id = null;
@@ -222,7 +224,8 @@ const useProfileStore = create((set, get) => ({
           desc,
           tiers,  // Send as is, API will handle stringification
           perks,  // Send as is, API will handle stringification
-          youtube_video_id
+          youtube_video_id,
+          telegram_group_id
         }),
       });
 

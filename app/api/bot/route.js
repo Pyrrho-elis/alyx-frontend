@@ -4,35 +4,54 @@ export async function GET(req) {
     try {
         const botToken = process.env.BOT_TOKEN;
         
-        // Skip verification if token is not set
         if (!botToken) {
-            console.log('Bot token not set, skipping verification');
+            console.error('Bot token not configured');
             return NextResponse.json({ 
-                ok: true,
-                botUsername: 'BOT_TOKEN_NOT_SET'
-            });
+                ok: false,
+                error: 'Bot token not configured. Please contact support.' 
+            }, { status: 500 });
         }
 
         const baseUrl = `https://api.telegram.org/bot${botToken}`;
         
-        // Get bot info to verify token
-        const response = await fetch(`${baseUrl}/getMe`);
-        const data = await response.json();
-        
-        if (!data.ok) {
-            throw new Error('Failed to verify bot token');
+        try {
+            // Get bot info to verify token
+            const response = await fetch(`${baseUrl}/getMe`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Telegram API error:', errorData);
+                throw new Error(errorData.description || 'Failed to verify bot token');
+            }
+
+            const data = await response.json();
+            
+            if (!data.ok || !data.result || !data.result.username) {
+                throw new Error('Invalid bot data received from Telegram');
+            }
+
+            return NextResponse.json({
+                ok: true,
+                botToken: data.result.username  // Return username for bot URL
+            });
+
+        } catch (error) {
+            console.error('Error verifying bot:', error);
+            return NextResponse.json({ 
+                ok: false, 
+                error: error.message || 'Failed to verify bot token'
+            }, { status: 500 });
         }
-        
-        return NextResponse.json({ 
-            ok: true,
-            botUsername: data.result.username 
-        });
     } catch (error) {
-        console.error('Bot verification error:', error);
+        console.error('Unexpected error:', error);
         return NextResponse.json({ 
-            ok: true, 
-            error: error.message,
-            botUsername: 'VERIFICATION_FAILED'
-        });
+            ok: false,
+            error: 'An unexpected error occurred'
+        }, { status: 500 });
     }
 }

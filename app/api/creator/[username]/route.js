@@ -134,7 +134,7 @@ export async function GET(req, { params }) {
     const supabase = createServerSupabase(cookieStore);
     const { data: creator, error } = await supabase
       .from('creators_page')
-      .select('id, username, title, desc, tiers, perks, youtube_video_id, avatar_url, isActive')
+      .select('id, username, title, desc, tiers, perks, youtube_video_id, avatar_url, isActive, telegram_group_id')
       .eq('username', username)
       .single();
 
@@ -197,6 +197,22 @@ export async function PUT(req, { params }) {
         error: 'No valid fields to update',
         allowed: ALLOWED_FIELDS 
       }, { status: 400 });
+    }
+
+    // If trying to set isActive to true, check for telegram_group_id
+    if (sanitizedData.isActive === true) {
+      const { data: creatorData } = await supabase
+        .from('creators_page')
+        .select('telegram_group_id')
+        .eq('username', username)
+        .single();
+
+      if (!creatorData?.telegram_group_id) {
+        return NextResponse.json({ 
+          error: 'Cannot publish profile without a linked Telegram group',
+          code: 'TELEGRAM_GROUP_REQUIRED'
+        }, { status: 400 });
+      }
     }
 
     const { data: updateData, error: updateError } = await supabase

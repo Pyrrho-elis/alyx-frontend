@@ -3,10 +3,11 @@ import { create } from 'zustand';
 const usePublishStore = create((set, get) => ({
     isActive: false,
     loading: false,
+    error: null,
     fetchCreatorData: async (username) => {
         if (!username) return;
         
-        set({ loading: true });
+        set({ loading: true, error: null });
         try {
             const response = await fetch(`/api/creator/${username}`);
             if (!response.ok) {
@@ -16,7 +17,7 @@ const usePublishStore = create((set, get) => ({
             set({ isActive: Boolean(data.isActive) });
         } catch (error) {
             console.error('Error fetching creator data:', error);
-            set({ isActive: false });
+            set({ isActive: false, error: error.message });
         } finally {
             set({ loading: false });
         }
@@ -24,7 +25,7 @@ const usePublishStore = create((set, get) => ({
     togglePublish: async (username) => {
         if (!username) return;
         
-        set({ loading: true });
+        set({ loading: true, error: null });
         try {
             const currentState = get().isActive;
             
@@ -38,21 +39,25 @@ const usePublishStore = create((set, get) => ({
                 }),
             });
 
+            const data = await response.json();
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update');
+                if (data.code === 'TELEGRAM_GROUP_REQUIRED') {
+                    throw new Error('Please link a Telegram group before publishing your profile');
+                }
+                throw new Error(data.error || 'Failed to update');
             }
 
-            const data = await response.json();
             if (data.success) {
-                set({ isActive: !currentState });
+                set({ isActive: !currentState, error: null });
             }
         } catch (error) {
             console.error('Error toggling publish state:', error);
+            set({ error: error.message });
         } finally {
             set({ loading: false });
         }
     },
+    clearError: () => set({ error: null })
 }));
 
 export default usePublishStore;

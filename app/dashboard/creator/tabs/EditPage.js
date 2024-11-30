@@ -22,10 +22,11 @@ import {
 import YoutubeEmbed from '@/app/components/YoutubeEmbed'
 import useProfileStore from '../useProfileStore'
 import { Label } from '@radix-ui/react-dropdown-menu'
-
+import usePublishStore from '../usePublishStore'
 
 export default function EditPage() {
     const { user } = useUser()
+    const router = useRouter()
     const [username, setUsername] = useState('');
     const {
         title,
@@ -49,6 +50,7 @@ export default function EditPage() {
         removePerk,
         handleSubmit,
     } = useProfileStore();
+    const { isActive, loading: publishLoading, error: publishError, togglePublish } = usePublishStore();
 
     useEffect(() => {
         if (user) {
@@ -70,6 +72,10 @@ export default function EditPage() {
     const handleSave = async (e) => {
         e.preventDefault();
         handleSubmit(username);
+    }
+
+    const handlePublish = async () => {
+        togglePublish();
     }
 
     return (
@@ -226,6 +232,18 @@ export default function EditPage() {
                             className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full'
                         >
                             Save Design
+                        </Button>
+                        {publishError && (
+                            <div className="text-red-500 text-sm">
+                                {publishError}
+                            </div>
+                        )}
+                        <Button
+                            onClick={handlePublish}
+                            disabled={publishLoading}
+                            variant={isActive ? "destructive" : "default"}
+                        >
+                            {publishLoading ? 'Loading...' : isActive ? 'Unpublish' : 'Publish'}
                         </Button>
                     </form>
                 )}
