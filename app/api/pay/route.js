@@ -11,19 +11,56 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const url = 'https://ye-buna.com/Pyrrho';
-        const { token } = await request.json();
+        
+        // Parse request body safely
+        let requestData;
+        try {
+            requestData = await request.json();
+        } catch (error) {
+            console.error('Failed to parse request body:', error);
+            return NextResponse.json({ error: 'Invalid request format' }, { status: 400 });
+        }
+
+        if (!requestData || !requestData.token) {
+            return NextResponse.json({ error: 'Token is required' }, { status: 400 });
+        }
+
+        const { token } = requestData;
         console.log('Received token:', token);
         const origin = request.headers.get('origin');
         console.log('Origin:', origin);
 
+        // Get creator data
         const creatorData = await getCreatorData(token, origin);
+        console.log('Creator data received:', creatorData);
         
         if (!creatorData || !creatorData.tiers) {
             console.error('Invalid creator data:', creatorData);
             return NextResponse.json({ error: 'Invalid creator data structure' }, { status: 400 });
         }
 
-        const amount = JSON.parse(creatorData.tiers)[0].price;
+        // Parse tiers safely
+        let parsedTiers;
+        try {
+            parsedTiers = typeof creatorData.tiers === 'string' 
+                ? JSON.parse(creatorData.tiers) 
+                : creatorData.tiers;
+        } catch (error) {
+            console.error('Error parsing tiers:', error);
+            return NextResponse.json({ error: 'Invalid tiers format' }, { status: 400 });
+        }
+
+        // Get first tier price
+        const firstTier = Array.isArray(parsedTiers) 
+            ? parsedTiers[0] 
+            : Object.values(parsedTiers)[0];
+            
+        if (!firstTier || !firstTier.price) {
+            console.error('Invalid tier structure:', firstTier);
+            return NextResponse.json({ error: 'Invalid tier price' }, { status: 400 });
+        }
+
+        const amount = firstTier.price;
         console.log('Amount:', amount);
 
         // Hardcoded headers
@@ -62,11 +99,15 @@ export async function POST(request) {
                 return NextResponse.json({ message: 'No redirect found.' }, { status: 400 });
             }
         } catch (error) {
+            console.error('Payment request failed:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
     } catch (error) {
-        console.error('Error in POST handler:', error.message);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error('Error in POST handler:', error);
+        return NextResponse.json({ 
+            error: 'Payment initialization failed', 
+            details: error.message || 'Unknown error'
+        }, { status: 500 });
     }
 }
 
