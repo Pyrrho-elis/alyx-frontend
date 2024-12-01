@@ -33,11 +33,44 @@ export async function POST(request) {
             // Send POST request to ye-buna
             const response = await axios.post(url, body.toString(), { headers });
             
-            // Extract redirect URL from response
+            // Extract redirect URL from response and log it
             const redirectMatch = response.data.match(/window\.location\.href='(.*?)'/);
             
             if (redirectMatch) {
                 const redirectUrl = redirectMatch[1];
+                console.log('Original redirect URL:', redirectUrl);
+                
+                // Check if it's a Chapa URL
+                if (redirectUrl.includes('checkout.chapa.co')) {
+                    // Generate tracking ID
+                    const trackingId = crypto.randomUUID();
+                    
+                    // Store the initial payment data directly
+                    const tracking = {
+                        trackingId,
+                        status: 'pending',
+                        chapaUrl: redirectUrl,
+                        amount,
+                        events: [{
+                            event: 'payment_initiated',
+                            timestamp: Date.now(),
+                            data: { amount, redirectUrl }
+                        }]
+                    };
+                    
+                    // Get the tracking map from the global scope
+                    const paymentTracking = global.paymentTracking || new Map();
+                    paymentTracking.set(trackingId, tracking);
+                    global.paymentTracking = paymentTracking;
+
+                    // Return our local payment verification page instead
+                    return NextResponse.json({ 
+                        redirectUrl: `/payment-verify?trackingId=${trackingId}`,
+                        originalUrl: redirectUrl,
+                        trackingId 
+                    });
+                }
+                
                 return NextResponse.json({ redirectUrl });
             } else {
                 return NextResponse.json({ error: 'No redirect URL found' }, { status: 400 });

@@ -1,24 +1,27 @@
 import { NextResponse } from 'next/server';
 
-// In-memory store for payment tracking
-const paymentTracking = new Map();
+// Initialize global tracking map if it doesn't exist
+if (!global.paymentTracking) {
+    global.paymentTracking = new Map();
+}
 
 export async function POST(request) {
     try {
         const data = await request.json();
-        const { event, status, data: paymentData } = data;
+        const { event, status, trackingId, data: paymentData } = data;
         
-        console.log('Payment tracking event:', { event, status, paymentData });
+        console.log('Payment tracking event:', { event, status, trackingId, paymentData });
         
-        // Generate a tracking ID if not exists
-        const trackingId = request.headers.get('x-tracking-id') || crypto.randomUUID();
-        
-        // Get or create tracking entry
-        let tracking = paymentTracking.get(trackingId) || {
-            events: [],
-            status: 'pending',
-            lastUpdate: Date.now()
-        };
+        // Get tracking entry
+        let tracking = global.paymentTracking.get(trackingId);
+        if (!tracking) {
+            tracking = {
+                trackingId,
+                status: 'pending',
+                events: [],
+                lastUpdate: Date.now()
+            };
+        }
         
         // Add new event
         tracking.events.push({
@@ -38,7 +41,7 @@ export async function POST(request) {
         }
         
         tracking.lastUpdate = Date.now();
-        paymentTracking.set(trackingId, tracking);
+        global.paymentTracking.set(trackingId, tracking);
         
         console.log('Updated tracking:', tracking);
         
@@ -62,7 +65,7 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Tracking ID required' }, { status: 400 });
         }
         
-        const tracking = paymentTracking.get(trackingId);
+        const tracking = global.paymentTracking.get(trackingId);
         
         if (!tracking) {
             return NextResponse.json({ error: 'Tracking not found' }, { status: 404 });
