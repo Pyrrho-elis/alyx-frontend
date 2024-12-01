@@ -32,41 +32,110 @@ export default function PaymentVerifyPage() {
                         })
                     });
 
-                    // Set up tracking for when user returns
-                    const channel = new BroadcastChannel('payment_status');
-                    
                     // Open Chapa in a new window
                     const paymentWindow = window.open(data.chapaUrl, 'payment_window', 'width=800,height=600');
                     
-                    // Check payment status periodically
+                    // Function to check if URL contains success/failure parameters
+                    const checkPaymentStatus = async (url) => {
+                        console.log('Checking URL:', url);
+                        if (url.includes('ye-buna.com/success')) {
+                            // This means payment was successful
+                            await fetch('/api/pay/track', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    event: 'payment_status',
+                                    trackingId,
+                                    status: 1,
+                                    data: { url, message: 'Payment successful - redirected to ye-buna success page' }
+                                })
+                            });
+                            setStatus('success');
+                            return true;
+                        } else if (url.includes('status=success') || url.includes('status=1')) {
+                            await fetch('/api/pay/track', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    event: 'payment_status',
+                                    trackingId,
+                                    status: 1,
+                                    data: { url }
+                                })
+                            });
+                            setStatus('success');
+                            return true;
+                        } else if (url.includes('status=failed') || url.includes('status=0') || url.includes('status=cancel')) {
+                            await fetch('/api/pay/track', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    event: 'payment_status',
+                                    trackingId,
+                                    status: 0,
+                                    data: { url }
+                                })
+                            });
+                            setStatus('failed');
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    // Check if popup is still open and its URL
                     const checkInterval = setInterval(async () => {
-                        try {
-                            const statusResponse = await fetch(`/api/pay/track?trackingId=${trackingId}`);
-                            const statusData = await statusResponse.json();
+                        if (!paymentWindow || paymentWindow.closed) {
+                            console.log('Payment window closed');
+                            clearInterval(checkInterval);
                             
-                            if (statusData.status === 'success') {
-                                clearInterval(checkInterval);
+                            // Final check of our tracking data
+                            const finalCheck = await fetch(`/api/pay/track?trackingId=${trackingId}`);
+                            const finalData = await finalCheck.json();
+                            
+                            if (finalData.status === 'success') {
                                 setStatus('success');
-                                if (paymentWindow) {
-                                    paymentWindow.close();
-                                }
-                            } else if (statusData.status === 'failed') {
-                                clearInterval(checkInterval);
+                            } else if (finalData.status === 'failed') {
                                 setStatus('failed');
-                                if (paymentWindow) {
-                                    paymentWindow.close();
+                            } else {
+                                // If window was closed without a status, mark as failed
+                                await fetch('/api/pay/track', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        event: 'payment_status',
+                                        trackingId,
+                                        status: 0,
+                                        data: { reason: 'Window closed without completion' }
+                                    })
+                                });
+                                setStatus('failed');
+                            }
+                            return;
+                        }
+
+                        try {
+                            // Try to check the popup's URL
+                            const popupUrl = paymentWindow.location.href;
+                            console.log('Checking popup URL:', popupUrl);
+                            
+                            // If we can access the URL and it's not about:blank
+                            if (popupUrl && popupUrl !== 'about:blank') {
+                                if (await checkPaymentStatus(popupUrl)) {
+                                    console.log('Payment status detected, closing window...');
+                                    clearInterval(checkInterval);
+                                    setTimeout(() => {
+                                        paymentWindow.close();
+                                    }, 500); // Give a small delay before closing
                                 }
                             }
-                        } catch (error) {
-                            console.error('Error checking payment status:', error);
+                        } catch (e) {
+                            // If we can't access the URL due to CORS, that's okay
+                            console.log('Could not access popup URL (expected due to CORS)');
                         }
-                    }, 2000); // Check every 2 seconds
+                    }, 500); // Check every 500ms instead of 1000ms
 
                     // Clean up interval when component unmounts
-                    return () => {
-                        clearInterval(checkInterval);
-                        channel.close();
-                    };
+                    return () => clearInterval(checkInterval);
                 }
             } catch (error) {
                 console.error('Verification error:', error);

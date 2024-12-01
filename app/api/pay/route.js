@@ -19,7 +19,7 @@ export async function POST(request) {
 
         // Form data
         const body = new URLSearchParams({
-            amount: amount,
+            amount: 1,
             subaccount_id: '6cdb6d07-eac7-4652-925b-00c78e4a94a0',
             user_id: '8957',
             supported: '',
