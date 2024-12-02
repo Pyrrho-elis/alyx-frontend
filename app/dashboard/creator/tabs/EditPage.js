@@ -238,13 +238,13 @@ export default function EditPage() {
                                 {publishError}
                             </div>
                         )}
-                        <Button
+                        {/* <Button
                             onClick={handlePublish}
                             disabled={publishLoading}
                             variant={isActive ? "destructive" : "default"}
                         >
                             {publishLoading ? 'Loading...' : isActive ? 'Unpublish' : 'Publish'}
-                        </Button>
+                        </Button> */}
                     </form>
                 )}
             </div>

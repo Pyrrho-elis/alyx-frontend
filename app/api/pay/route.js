@@ -2,6 +2,13 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import { createClient } from '@/app/utils/supabase/server';
+import { cookies } from 'next/headers';
+
+// Create a single supabase client for interacting with your database
+const createServerSupabase = (cookieStore) => {
+    return createClient(cookieStore);
+};
 
 export async function POST(request) {
     try {
@@ -18,8 +25,29 @@ export async function POST(request) {
             const userData = jwt.verify(token, process.env.SERVER_JWT_SECRET);
             console.log('Token verified, user data:', userData);
             
+            // Get creator data to get tier price
+            const cookieStore = cookies();
+            const supabase = createServerSupabase(cookieStore);
+            const { data: creator, error } = await supabase
+                .from('creators_page')
+                .select('id, username, tiers')
+                .eq('username', userData.creator_id)
+                .single();
+
+            if (error || !creator) {
+                console.error('Error fetching creator:', error);
+                return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
+            }
+
+            // Get tier price
+            const tiers = typeof creator.tiers === 'string' ? JSON.parse(creator.tiers) : creator.tiers;
+            const tierPrice = tiers["0"].price; // Currently only one tier
+            
+            if (!tierPrice) {
+                return NextResponse.json({ error: 'Invalid tier price' }, { status: 400 });
+            }
+
             const url = 'https://ye-buna.com/Pyrrho';
-            const amount = 11; // Fixed amount for testing
             
             // Hardcoded headers for ye-buna
             const headers = {
@@ -33,7 +61,7 @@ export async function POST(request) {
 
             // Form data
             const body = new URLSearchParams({
-                amount: amount,
+                amount: tierPrice,
                 subaccount_id: '6cdb6d07-eac7-4652-925b-00c78e4a94a0',
                 user_id: userData.user_id.toString(),
                 supported: '',
@@ -64,12 +92,12 @@ export async function POST(request) {
                             trackingId,
                             status: 'pending',
                             chapaUrl: redirectUrl,
-                            amount,
+                            amount: tierPrice,
                             token, // Store token for subscription creation
                             events: [{
                                 event: 'payment_initiated',
                                 timestamp: Date.now(),
-                                data: { amount, redirectUrl }
+                                data: { amount: tierPrice, redirectUrl }
                             }]
                         };
                         

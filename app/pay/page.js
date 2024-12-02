@@ -79,7 +79,7 @@ export default function PayPage() {
 
     if (status === 'loading') {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center min-h-screen w-full">
                 <div className="text-center">
                     <h2 className="text-xl font-semibold mb-4">Initializing Payment...</h2>
                     <p>Please wait while we verify your payment token.</p>
@@ -90,7 +90,7 @@ export default function PayPage() {
 
     if (error) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center min-h-screen w-full">
                 <div className="text-center text-red-600">
                     <h2 className="text-xl font-semibold mb-4">Payment Error</h2>
                     <p>{error}</p>
