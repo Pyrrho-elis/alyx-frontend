@@ -1,83 +1,110 @@
 // app/api/pay/route.js
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 
 export async function POST(request) {
     try {
-        const url = 'https://ye-buna.com/Pyrrho';
-        const amount = 11; // Fixed amount for testing
+        const { token } = await request.json();
         
-        // Hardcoded headers for ye-buna
-        const headers = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.71 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Origin': 'https://ye-buna.com',
-            'Referer': 'https://ye-buna.com/Pyrrho'
-        };
+        if (!token) {
+            return NextResponse.json({ error: 'Payment token is required' }, { status: 400 });
+        }
 
-        // Form data
-        const body = new URLSearchParams({
-            amount: 1,
-            subaccount_id: '6cdb6d07-eac7-4652-925b-00c78e4a94a0',
-            user_id: '8957',
-            supported: '',
-            category: 'tip',
-            social: '',
-            message: '',
-            tip: '',
-        });
+        console.log('Verifying payment token:', token);
 
         try {
-            // Send POST request to ye-buna
-            const response = await axios.post(url, body.toString(), { headers });
+            // Verify token
+            const userData = jwt.verify(token, process.env.SERVER_JWT_SECRET);
+            console.log('Token verified, user data:', userData);
             
-            // Extract redirect URL from response and log it
-            const redirectMatch = response.data.match(/window\.location\.href='(.*?)'/);
+            const url = 'https://ye-buna.com/Pyrrho';
+            const amount = 11; // Fixed amount for testing
             
-            if (redirectMatch) {
-                const redirectUrl = redirectMatch[1];
-                console.log('Original redirect URL:', redirectUrl);
-                
-                // Check if it's a Chapa URL
-                if (redirectUrl.includes('checkout.chapa.co')) {
-                    // Generate tracking ID
-                    const trackingId = crypto.randomUUID();
-                    
-                    // Store the initial payment data directly
-                    const tracking = {
-                        trackingId,
-                        status: 'pending',
-                        chapaUrl: redirectUrl,
-                        amount,
-                        events: [{
-                            event: 'payment_initiated',
-                            timestamp: Date.now(),
-                            data: { amount, redirectUrl }
-                        }]
-                    };
-                    
-                    // Get the tracking map from the global scope
-                    const paymentTracking = global.paymentTracking || new Map();
-                    paymentTracking.set(trackingId, tracking);
-                    global.paymentTracking = paymentTracking;
+            // Hardcoded headers for ye-buna
+            const headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.71 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Origin': 'https://ye-buna.com',
+                'Referer': 'https://ye-buna.com/Pyrrho'
+            };
 
-                    // Return our local payment verification page instead
-                    return NextResponse.json({ 
-                        redirectUrl: `/payment-verify?trackingId=${trackingId}`,
-                        originalUrl: redirectUrl,
-                        trackingId 
-                    });
-                }
+            // Form data
+            const body = new URLSearchParams({
+                amount: amount,
+                subaccount_id: '6cdb6d07-eac7-4652-925b-00c78e4a94a0',
+                user_id: userData.user_id.toString(),
+                supported: '',
+                category: 'tip',
+                social: '',
+                message: '',
+                tip: '',
+            });
+
+            try {
+                // Send POST request to ye-buna
+                const response = await axios.post(url, body.toString(), { headers });
                 
-                return NextResponse.json({ redirectUrl });
-            } else {
-                return NextResponse.json({ error: 'No redirect URL found' }, { status: 400 });
+                // Extract redirect URL from response and log it
+                const redirectMatch = response.data.match(/window\.location\.href='(.*?)'/);
+                
+                if (redirectMatch) {
+                    const redirectUrl = redirectMatch[1];
+                    console.log('Original redirect URL:', redirectUrl);
+                    
+                    // Check if it's a Chapa URL
+                    if (redirectUrl.includes('checkout.chapa.co')) {
+                        // Generate tracking ID
+                        const trackingId = crypto.randomUUID();
+                        
+                        // Store the initial payment data directly
+                        const tracking = {
+                            trackingId,
+                            status: 'pending',
+                            chapaUrl: redirectUrl,
+                            amount,
+                            token, // Store token for subscription creation
+                            events: [{
+                                event: 'payment_initiated',
+                                timestamp: Date.now(),
+                                data: { amount, redirectUrl }
+                            }]
+                        };
+                        
+                        // Get the tracking map from the global scope
+                        const paymentTracking = global.paymentTracking || new Map();
+                        paymentTracking.set(trackingId, tracking);
+                        global.paymentTracking = paymentTracking;
+
+                        // Get protocol and host from request headers
+                        const protocol = request.headers.get('x-forwarded-proto') || 'http';
+                        const host = request.headers.get('host') || 'localhost:3000';
+                        
+                        // Construct the full URL
+                        const verifyUrl = `${protocol}://${host}/payment-verify?trackingId=${trackingId}`;
+                        console.log('Redirecting to:', verifyUrl);
+
+                        // Return our local payment verification page instead
+                        return NextResponse.json({ 
+                            redirectUrl: verifyUrl,
+                            originalUrl: redirectUrl,
+                            trackingId 
+                        });
+                    }
+                    
+                    return NextResponse.json({ redirectUrl });
+                } else {
+                    return NextResponse.json({ error: 'No redirect URL found' }, { status: 400 });
+                }
+            } catch (axiosError) {
+                console.error('Payment request failed:', axiosError);
+                return NextResponse.json({ error: axiosError.message }, { status: 500 });
             }
-        } catch (error) {
-            console.error('Payment request failed:', error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
+        } catch (jwtError) {
+            console.error('JWT verification failed:', jwtError);
+            return NextResponse.json({ error: 'Invalid payment token' }, { status: 400 });
         }
     } catch (error) {
         console.error('Error in payment handler:', error);

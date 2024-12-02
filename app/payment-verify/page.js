@@ -59,6 +59,30 @@ export default function PaymentVerifyPage() {
                         // Check for success patterns
                         if (url.includes('/success/success_tip') || url.includes('/success?') || url.includes('/success/')) {
                             console.log('Success URL detected:', url);
+                            
+                            // Get tracking data to get token
+                            const response = await fetch(`/api/pay/track?trackingId=${trackingId}`);
+                            const trackingData = await response.json();
+                            
+                            if (trackingData.token) {
+                                // Create subscription
+                                const subscribeResponse = await fetch('/api/verify-payment-token', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        token: trackingData.token,
+                                        action: 'subscribe',
+                                        response: { status: 1 }
+                                    })
+                                });
+
+                                if (!subscribeResponse.ok) {
+                                    console.error('Failed to create subscription:', await subscribeResponse.text());
+                                }
+                            }
+
                             await fetch('/api/pay/track', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
