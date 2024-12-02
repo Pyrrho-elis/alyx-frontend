@@ -34,12 +34,31 @@ export default function PaymentVerifyPage() {
 
                     // Open Chapa in a new window
                     const paymentWindow = window.open(data.chapaUrl, 'payment_window', 'width=800,height=600');
-                    
-                    // Function to check if URL contains success/failure parameters
+                    let lastUrl = '';
+
+                    // Function to check payment status from URL
                     const checkPaymentStatus = async (url) => {
-                        console.log('Checking URL:', url);
-                        if (url.includes('ye-buna.com/success')) {
-                            // This means payment was successful
+                        // Don't process the same URL twice
+                        if (url === lastUrl) return false;
+                        lastUrl = url;
+                        
+                        console.log('New URL detected:', url);
+                        
+                        // Track all redirects
+                        await fetch('/api/pay/track', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event: 'url_change',
+                                trackingId,
+                                status: 'pending',
+                                data: { url }
+                            })
+                        });
+
+                        // Check for success patterns
+                        if (url.includes('/success/success_tip') || url.includes('/success?') || url.includes('/success/')) {
+                            console.log('Success URL detected:', url);
                             await fetch('/api/pay/track', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -47,94 +66,73 @@ export default function PaymentVerifyPage() {
                                     event: 'payment_status',
                                     trackingId,
                                     status: 1,
-                                    data: { url, message: 'Payment successful - redirected to ye-buna success page' }
+                                    data: { url, message: 'Payment successful - success URL detected' }
                                 })
                             });
                             setStatus('success');
-                            return true;
-                        } else if (url.includes('status=success') || url.includes('status=1')) {
-                            await fetch('/api/pay/track', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    event: 'payment_status',
-                                    trackingId,
-                                    status: 1,
-                                    data: { url }
-                                })
-                            });
-                            setStatus('success');
-                            return true;
-                        } else if (url.includes('status=failed') || url.includes('status=0') || url.includes('status=cancel')) {
-                            await fetch('/api/pay/track', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    event: 'payment_status',
-                                    trackingId,
-                                    status: 0,
-                                    data: { url }
-                                })
-                            });
-                            setStatus('failed');
                             return true;
                         }
+
+                        /* Keeping verification URL check commented out since we don't need it
+                        // Check for verification URL
+                        if (url.includes('/verification?txRef=')) {
+                            console.log('Verification URL detected:', url);
+                            // Wait a bit to see if it redirects to success
+                            return new Promise(resolve => {
+                                setTimeout(async () => {
+                                    try {
+                                        const currentUrl = paymentWindow.location.href;
+                                        if (currentUrl.includes('/success/')) {
+                                            await checkPaymentStatus(currentUrl);
+                                            resolve(true);
+                                        } else {
+                                            resolve(false);
+                                        }
+                                    } catch (e) {
+                                        resolve(false);
+                                    }
+                                }, 2000);
+                            });
+                        }
+                        */
+
                         return false;
                     };
 
-                    // Check if popup is still open and its URL
+                    // Check window status and URL
                     const checkInterval = setInterval(async () => {
                         if (!paymentWindow || paymentWindow.closed) {
                             console.log('Payment window closed');
                             clearInterval(checkInterval);
                             
-                            // Final check of our tracking data
+                            // Final check of tracking data
                             const finalCheck = await fetch(`/api/pay/track?trackingId=${trackingId}`);
                             const finalData = await finalCheck.json();
                             
                             if (finalData.status === 'success') {
                                 setStatus('success');
-                            } else if (finalData.status === 'failed') {
-                                setStatus('failed');
                             } else {
-                                // If window was closed without a status, mark as failed
-                                await fetch('/api/pay/track', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        event: 'payment_status',
-                                        trackingId,
-                                        status: 0,
-                                        data: { reason: 'Window closed without completion' }
-                                    })
-                                });
                                 setStatus('failed');
                             }
                             return;
                         }
 
                         try {
-                            // Try to check the popup's URL
                             const popupUrl = paymentWindow.location.href;
-                            console.log('Checking popup URL:', popupUrl);
-                            
-                            // If we can access the URL and it's not about:blank
                             if (popupUrl && popupUrl !== 'about:blank') {
                                 if (await checkPaymentStatus(popupUrl)) {
-                                    console.log('Payment status detected, closing window...');
+                                    console.log('Success detected, closing window...');
                                     clearInterval(checkInterval);
                                     setTimeout(() => {
                                         paymentWindow.close();
-                                    }, 500); // Give a small delay before closing
+                                    }, 1000);
                                 }
                             }
                         } catch (e) {
-                            // If we can't access the URL due to CORS, that's okay
-                            console.log('Could not access popup URL (expected due to CORS)');
+                            // CORS error, ignore
                         }
-                    }, 500); // Check every 500ms instead of 1000ms
+                    }, 500);
 
-                    // Clean up interval when component unmounts
                     return () => clearInterval(checkInterval);
                 }
             } catch (error) {
@@ -149,7 +147,7 @@ export default function PaymentVerifyPage() {
     }, [trackingId]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 w-full">
             <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
                 <div className="text-center">
                     <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
@@ -158,7 +156,7 @@ export default function PaymentVerifyPage() {
                     {status === 'initializing' && (
                         <>
                             <p className="text-lg text-gray-600 mb-4">
-                                Initializing payment verification...
+                                Processing your payment...
                             </p>
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
                         </>
