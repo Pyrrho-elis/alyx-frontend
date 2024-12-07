@@ -5,8 +5,10 @@ import { useSearchParams } from 'next/navigation';
 
 export default function PaymentVerifyPage() {
     const [status, setStatus] = useState('initializing');
+    const [message, setMessage] = useState('');
     const searchParams = useSearchParams();
     const trackingId = searchParams.get('trackingId');
+    const txRef = searchParams.get('tx_ref'); // Chapa adds this
 
     useEffect(() => {
         const initVerification = async () => {
@@ -18,7 +20,7 @@ export default function PaymentVerifyPage() {
                 }
 
                 const data = await response.json();
-                console.log('Payment tracking data:', data);
+                console.log('Payment tracking data:', JSON.stringify(data, null, 2));
 
                 if (data.chapaUrl) {
                     // Store that we're redirecting to Chapa
@@ -28,182 +30,64 @@ export default function PaymentVerifyPage() {
                         body: JSON.stringify({
                             event: 'redirecting_to_chapa',
                             trackingId,
-                            status: 'pending'
+                            data: { url: data.chapaUrl }
                         })
                     });
 
-                    // Open Chapa in a new window
-                    const paymentWindow = window.open(data.chapaUrl, 'payment_window', 'width=800,height=600');
-                    let lastUrl = '';
-
-                    // Function to check payment status from URL
-                    const checkPaymentStatus = async (url) => {
-                        // Don't process the same URL twice
-                        if (url === lastUrl) return false;
-                        lastUrl = url;
+                    // If we have a transaction reference, check its status
+                    if (txRef) {
+                        const statusResponse = await fetch(`/api/chapa-status?txRef=${txRef}&trackingId=${trackingId}`);
+                        const statusData = await statusResponse.json();
                         
-                        console.log('New URL detected:', url);
+                        console.log('Transaction status:', JSON.stringify(statusData, null, 2));
                         
-                        // Track all redirects
-                        await fetch('/api/pay/track', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                event: 'url_change',
-                                trackingId,
-                                status: 'pending',
-                                data: { url }
-                            })
-                        });
-
-                        // Check for success patterns
-                        if (url.includes('/success/success_tip') || url.includes('/success?') || url.includes('/success/')) {
-                            console.log('Success URL detected:', url);
-                            
-                            // Get tracking data to get token
-                            const response = await fetch(`/api/pay/track?trackingId=${trackingId}`);
-                            const trackingData = await response.json();
-                            
-                            if (trackingData.token) {
-                                // Create subscription
-                                const subscribeResponse = await fetch('/api/verify-payment-token', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        token: trackingData.token,
-                                        action: 'subscribe',
-                                        response: { status: 1 }
-                                    })
-                                });
-
-                                if (!subscribeResponse.ok) {
-                                    console.error('Failed to create subscription:', await subscribeResponse.text());
-                                }
-                            }
-
-                            await fetch('/api/pay/track', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    event: 'payment_status',
-                                    trackingId,
-                                    status: 1,
-                                    data: { url, message: 'Payment successful - success URL detected' }
-                                })
-                            });
-                            setStatus('success');
-                            return true;
-                        }
-
-                        /* Keeping verification URL check commented out since we don't need it
-                        // Check for verification URL
-                        if (url.includes('/verification?txRef=')) {
-                            console.log('Verification URL detected:', url);
-                            // Wait a bit to see if it redirects to success
-                            return new Promise(resolve => {
-                                setTimeout(async () => {
-                                    try {
-                                        const currentUrl = paymentWindow.location.href;
-                                        if (currentUrl.includes('/success/')) {
-                                            await checkPaymentStatus(currentUrl);
-                                            resolve(true);
-                                        } else {
-                                            resolve(false);
-                                        }
-                                    } catch (e) {
-                                        resolve(false);
-                                    }
-                                }, 2000);
-                            });
-                        }
-                        */
-
-                        return false;
-                    };
-
-                    // Check window status and URL
-                    const checkInterval = setInterval(async () => {
-                        if (!paymentWindow || paymentWindow.closed) {
-                            console.log('Payment window closed');
-                            clearInterval(checkInterval);
-                            
-                            // Final check of tracking data
-                            const finalCheck = await fetch(`/api/pay/track?trackingId=${trackingId}`);
-                            const finalData = await finalCheck.json();
-                            
-                            if (finalData.status === 'success') {
-                                setStatus('success');
-                            } else {
-                                setStatus('failed');
-                            }
+                        if (statusData.status === 2) {
+                            setStatus('failed');
+                            setMessage(statusData.message || 'Payment failed');
                             return;
                         }
+                    }
 
-                        try {
-                            const popupUrl = paymentWindow.location.href;
-                            if (popupUrl && popupUrl !== 'about:blank') {
-                                if (await checkPaymentStatus(popupUrl)) {
-                                    console.log('Success detected, closing window...');
-                                    clearInterval(checkInterval);
-                                    setTimeout(() => {
-                                        paymentWindow.close();
-                                    }, 1000);
-                                }
-                            }
-                        } catch (e) {
-                            // CORS error, ignore
-                        }
-                    }, 500);
-
-                    return () => clearInterval(checkInterval);
+                    // Redirect to Chapa in the same window
+                    window.location.href = data.chapaUrl;
                 }
+
             } catch (error) {
-                console.error('Verification error:', error);
+                console.error('Payment verification error:', error);
                 setStatus('error');
+                setMessage(error.message);
+                
+                // Track the error
+                await fetch('/api/pay/track', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event: 'error',
+                        trackingId,
+                        data: { error: error.message }
+                    })
+                });
             }
         };
 
         if (trackingId) {
             initVerification();
         }
-    }, [trackingId]);
+    }, [trackingId, txRef]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 w-full">
-            <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-                <div className="text-center">
-                    <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
-                        Payment Verification
-                    </h2>
-                    {status === 'initializing' && (
-                        <>
-                            <p className="text-lg text-gray-600 mb-4">
-                                Processing your payment...
-                            </p>
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                        </>
-                    )}
-                    {status === 'success' && (
-                        <div className="text-green-600">
-                            <p className="text-lg font-semibold">Payment Successful!</p>
-                            <p className="mt-2">Your payment has been processed successfully.</p>
-                        </div>
-                    )}
-                    {status === 'failed' && (
-                        <div className="text-red-600">
-                            <p className="text-lg font-semibold">Payment Failed</p>
-                            <p className="mt-2">There was an issue processing your payment.</p>
-                        </div>
-                    )}
-                    {status === 'error' && (
-                        <div className="text-red-600">
-                            <p className="text-lg font-semibold">Verification Error</p>
-                            <p className="mt-2">Unable to verify payment status.</p>
-                        </div>
-                    )}
-                </div>
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <h1 className="text-2xl font-bold mb-4">
+                    {status === 'initializing' && 'Processing Payment...'}
+                    {status === 'failed' && 'Payment Failed'}
+                    {status === 'error' && 'Payment Error'}
+                </h1>
+                {(status === 'failed' || status === 'error') && message && (
+                    <p className="text-red-500">
+                        {message}
+                    </p>
+                )}
             </div>
         </div>
     );
