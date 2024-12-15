@@ -10,7 +10,7 @@ const PUBLIC_ROUTES = [
   '/creator',
   '/',
   '/learn-more',
-  '/contact',
+//   '/contact',
   '/admin'  // Adding admin route as public
 ];
 
