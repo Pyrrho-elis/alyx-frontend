@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/app/utils/supabase/server";
+import { createClient, createServiceClient } from "@/app/utils/supabase/server";
 import { cookies } from "next/headers";
 
 const PLATFORM_FEE = 0.25; // 25% platform fee (20% platform + 5% processing)
 
 export async function POST(req) {
     const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = createServiceClient(cookieStore)
+
     const { user_id, creator_id } = await req.json();
 
     console.log('Storing subscriber:', { user_id, creator_id });
@@ -24,15 +25,28 @@ export async function POST(req) {
             throw creatorError;
         }
 
+        if (!creator) {
+            console.error('Creator not found for username:', creator_id);
+            return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
+        }
+
         if (!creator?.tiers) {
             throw new Error('Creator tiers not set');
         }
 
+        console.log('Creator tiers:', creator.tiers);
+
         // Get the price from the first tier
-        const subscriptionPrice = JSON.parse(creator.tiers)[0].price;
+        const subscriptionPrice = typeof creator.tiers === 'string'
+            ? JSON.parse(creator.tiers)[0].price
+            : creator.tiers[0].price;
         if (!subscriptionPrice) {
             throw new Error('Creator tier price not set');
         }
+        const tierId = typeof creator.tiers === 'string'
+            ? JSON.parse(creator.tiers)[0].name
+            : creator.tiers[0].name;
+        console.log('Tier price:', subscriptionPrice);
 
         // First check if there's already an active subscription
         const { data: existingSubs, error: checkError } = await supabase
@@ -50,7 +64,7 @@ export async function POST(req) {
 
         if (existingSubs && existingSubs.length > 0) {
             console.log('Found existing active subscription:', existingSubs[0]);
-            return NextResponse.json({ 
+            return NextResponse.json({
                 message: 'Subscription already exists',
                 subscription: existingSubs[0]
             });
@@ -82,7 +96,9 @@ export async function POST(req) {
                 status: 'active',
                 created_at: new Date().toISOString(),
                 expiration_date: expirationDate.toISOString()
-            });
+            })
+            .select()
+            .single();;
 
         if (subscriptionError) {
             console.error('Error creating subscription:', subscriptionError);
@@ -97,6 +113,8 @@ export async function POST(req) {
             .from('revenue_events')
             .insert({
                 creator_id: creator_id,
+                subscriber_id: user_id,
+                tier_id: tierId,
                 amount: subscriptionPrice,
                 creator_share: creatorShare,
                 platform_fee: subscriptionPrice * PLATFORM_FEE,
@@ -121,7 +139,7 @@ export async function POST(req) {
         const onboardingResult = await onBoarding(creator_id, user_id, supabase);
         console.log('Onboarding result:', onboardingResult);
 
-        return NextResponse.json({ 
+        return NextResponse.json({
             success: true,
             subscription: subscription,
             onboarding: onboardingResult
@@ -144,6 +162,11 @@ async function onBoarding(creator_id, user_id, supabase) {
             return { success: false, error: error.message };
         }
 
+        if (!creator) {
+            console.error('Creator not found for username:', creator_id);
+            return { success: false, error: 'Creator not found' };
+        }
+
         const creatorGroupId = creator.telegram_group_id;
         if (!creatorGroupId) {
             console.error('No creator group id found');
@@ -158,8 +181,8 @@ async function onBoarding(creator_id, user_id, supabase) {
 
         const messageText = `You have successfully subscribed to ${creator.username}! Click the link below to join the group:\n${inviteLink}`;
         const messageSent = await sendMessage(user_id, messageText);
-        
-        return { 
+
+        return {
             success: true,
             inviteLink: inviteLink,
             messageSent: messageSent
@@ -208,7 +231,6 @@ const sendMessage = async (user_id, message) => {
             body: JSON.stringify({
                 chat_id: user_id,
                 text: message,
-                parse_mode: 'Markdown',
             }),
         });
         const data = await response.json();

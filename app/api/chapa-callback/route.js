@@ -8,60 +8,27 @@ export async function POST(req) {
         // Log the full callback data
         console.log('Chapa callback - Raw data:', JSON.stringify(data, null, 2));
 
-        // Extract tracking ID from the customization object if it exists
-        const trackingId = data?.customization?.tracking_id;
-        
-        if (trackingId) {
-            console.log('Processing Chapa callback for tracking ID:', trackingId);
+        // If this is a successful payment, create subscription
+        if (data.status === 'success') {
+            console.log('Payment successful, creating subscription...');
             
-            // Log this callback in our tracking system
-            const trackResponse = await fetch(`${req.headers.get('origin')}/api/pay/track`, {
+            // Create subscription
+            const subscribeResponse = await fetch(`${req.headers.get('origin')}/api/verify-payment-token`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
-                    event: 'chapa_callback',
-                    trackingId,
-                    data: data // Store all data from Chapa
+                    token: data.tx_ref, // Use tx_ref directly
+                    action: 'subscribe',
+                    response: { status: 1 }
                 })
             });
 
-            const trackResult = await trackResponse.json();
-            console.log('Tracking result:', JSON.stringify(trackResult, null, 2));
-
-            // If this is a successful payment and we have the token, create subscription
-            if (data.status === 'success') {
-                console.log('Payment successful, fetching tracking data...');
-                
-                // Get tracking data to get token
-                const response = await fetch(`${req.headers.get('origin')}/api/pay/track?trackingId=${trackingId}`);
-                const trackingData = await response.json();
-                
-                if (trackingData.token) {
-                    console.log('Creating subscription for successful payment...');
-                    
-                    // Create subscription
-                    const subscribeResponse = await fetch(`${req.headers.get('origin')}/api/verify-payment-token`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            token: trackingData.token,
-                            action: 'subscribe',
-                            response: { status: 1 }
-                        })
-                    });
-
-                    const subscribeResult = await subscribeResponse.json();
-                    console.log('Subscription result:', JSON.stringify(subscribeResult, null, 2));
-                } else {
-                    console.log('No token found in tracking data:', JSON.stringify(trackingData, null, 2));
-                }
-            } else {
-                console.log('Payment not successful. Status:', data.status);
-            }
+            const subscribeResult = await subscribeResponse.json();
+            console.log('Subscription result:', JSON.stringify(subscribeResult, null, 2));
         } else {
-            console.log('No tracking ID found in callback data');
+            console.log('Payment not successful. Status:', data.status);
         }
 
         // Always return success to Chapa

@@ -1,93 +1,59 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export default function PaymentVerifyPage() {
-    const [status, setStatus] = useState('initializing');
-    const [message, setMessage] = useState('');
     const searchParams = useSearchParams();
-    const trackingId = searchParams.get('trackingId');
-    const txRef = searchParams.get('tx_ref'); // Chapa adds this
+    const tx_ref = searchParams.get('tx_ref');
+    const status = searchParams.get('status');
 
     useEffect(() => {
-        const initVerification = async () => {
+        const verifyPayment = async () => {
             try {
-                // Get the payment details from tracking
-                const response = await fetch(`/api/pay/track?trackingId=${trackingId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to get payment details');
+                if (!tx_ref) {
+                    throw new Error('Payment reference not found');
                 }
 
-                const data = await response.json();
-                console.log('Payment tracking data:', JSON.stringify(data, null, 2));
-
-                if (data.chapaUrl) {
-                    // Store that we're redirecting to Chapa
-                    await fetch('/api/pay/track', {
+                if (status === 'success') {
+                    // Create subscription
+                    const response = await fetch('/api/verify-payment-token', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
                         body: JSON.stringify({
-                            event: 'redirecting_to_chapa',
-                            trackingId,
-                            data: { url: data.chapaUrl }
+                            token: tx_ref,
+                            action: 'subscribe',
+                            response: { status: 1 }
                         })
                     });
 
-                    // If we have a transaction reference, check its status
-                    if (txRef) {
-                        const statusResponse = await fetch(`/api/chapa-status?txRef=${txRef}&trackingId=${trackingId}`);
-                        const statusData = await statusResponse.json();
-                        
-                        console.log('Transaction status:', JSON.stringify(statusData, null, 2));
-                        
-                        if (statusData.status === 2) {
-                            setStatus('failed');
-                            setMessage(statusData.message || 'Payment failed');
-                            return;
-                        }
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to verify payment');
                     }
 
-                    // Redirect to Chapa in the same window
-                    window.location.href = data.chapaUrl;
+                    // Redirect to success page or creator's page
+                    window.location.href = '/payment-success';
+                } else {
+                    // Payment failed
+                    window.location.href = '/payment-failed';
                 }
-
             } catch (error) {
                 console.error('Payment verification error:', error);
-                setStatus('error');
-                setMessage(error.message);
-                
-                // Track the error
-                await fetch('/api/pay/track', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        event: 'error',
-                        trackingId,
-                        data: { error: error.message }
-                    })
-                });
+                window.location.href = '/payment-failed';
             }
         };
 
-        if (trackingId) {
-            initVerification();
-        }
-    }, [trackingId, txRef]);
+        verifyPayment();
+    }, [tx_ref, status]);
 
     return (
         <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
-                <h1 className="text-2xl font-bold mb-4">
-                    {status === 'initializing' && 'Processing Payment...'}
-                    {status === 'failed' && 'Payment Failed'}
-                    {status === 'error' && 'Payment Error'}
-                </h1>
-                {(status === 'failed' || status === 'error') && message && (
-                    <p className="text-red-500">
-                        {message}
-                    </p>
-                )}
+                <h1 className="text-2xl font-bold mb-4">Verifying Payment...</h1>
+                <p>Please wait while we verify your payment.</p>
             </div>
         </div>
     );
