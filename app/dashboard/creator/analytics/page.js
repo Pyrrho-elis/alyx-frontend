@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/app/hooks/useUser';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, DollarSign, Users, TrendingUp, Wallet } from 'lucide-react';
-import { CustomButton } from '@/components/ui/custom-button';
 import {
     Table,
     TableBody,
@@ -13,6 +12,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import CustomButton from '@/app/components/CustomButton';
 
 export default function AnalyticsPage() {
     const { user } = useUser();

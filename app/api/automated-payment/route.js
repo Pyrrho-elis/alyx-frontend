@@ -22,7 +22,7 @@ export async function POST(req) {
         }
 
         // Call external payment API
-        const paymentResponse = await fetch('http://localhost:4867/api/pay', {
+        const paymentResponse = await fetch(`${process.env.PAYMENT_API}/api/pay`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
