@@ -27,15 +27,16 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/paytest") || pathname.startsWith("/pay") || pathname.startsWith("/creator")) {
-        return null
+    const allowedPages = ["/apply", "/waitlist", "/learn-more", "/contact", "/", "/login"]
+
+    if (!allowedPages.some((page) => pathname === page)) {
+        return null;
     }
 
     const navLinks = [
         { href: "/waitlist", label: "Join the Waitlist" },
         { href: "/learn-more", label: "How It Works" },
         { href: "/contact", label: "Contact" },
-        { href: "/waitlist", label: "Get Access" },
     ]
 
     return (
