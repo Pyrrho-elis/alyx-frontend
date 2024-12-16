@@ -27,7 +27,7 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/paytest") || pathname.startsWith("/pay")) {
+    if (pathname.startsWith("/dashboard") || pathname.startsWith("/paytest") || pathname.startsWith("/pay") || pathname.startsWith("/creator")) {
         return null
     }
 
