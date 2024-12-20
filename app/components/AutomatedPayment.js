@@ -14,11 +14,9 @@ export default function AutomatedPayment({ userId, creatorId, token }) {
         e.preventDefault();
         setLoading(true);
         setError(null);
-        const apiBaseUrl = `${window.location.origin}`;
-        console.log(apiBaseUrl)
 
         try {
-            const response = await fetch(`${apiBaseUrl}/api/automated-payment`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_PAYMENT_API}/api/automated-payment`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
