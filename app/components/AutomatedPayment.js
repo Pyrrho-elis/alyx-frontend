@@ -16,7 +16,7 @@ export default function AutomatedPayment({ userId, creatorId, token }) {
         setError(null);
 
         try {
-            const response = await fetch('/api/automated-payment', {
+            const response = await fetch(`${req.headers.get('origin')}/api/automated-payment`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
