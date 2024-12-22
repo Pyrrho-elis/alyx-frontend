@@ -22,7 +22,7 @@ export default function TestSubscriber() {
             });
 
             if (!verifyResponse.ok) {
-                throw new Error('Token verification failed');
+                throw new Error('Token verification failed:', );
             }
 
             const data = await verifyResponse.json();

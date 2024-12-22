@@ -59,7 +59,7 @@ export default function AutomatedPayment({ userId, creatorId, token }) {
                         <Input
                             id="phone"
                             type="tel"
-                            pattern="09[0-9]{8}"
+                            pattern="(09\d{8}|9\d{8})"
                             placeholder="9 1234 5678"
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}

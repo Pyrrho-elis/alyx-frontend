@@ -71,6 +71,8 @@ export default function TestPayPage() {
                 <ErrorScreen error={error || creatorError} router={router} />
             ) : !userData ? (
                 <NoUserDataScreen router={router} />
+            ) : userData.has_active_subscription ? (
+                <AlreadySubscribed />
             ) : (
                 <PaymentPageContent
                     avatar_url={avatar_url}
@@ -127,16 +129,33 @@ function NoUserDataScreen({ router }) {
                         </svg>
                     </div>
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">No user data found</h2>
-                    <button
+                    {/* <button
                         onClick={() => router.push('/')}
                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                         Return Home
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </div>
     );
+}
+
+function AlreadySubscribed() {
+    return (
+        <div className="min-h-screen flex w-full items-center justify-center bg-gray-50">
+            <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8">
+                <div className="text-center">
+                    <div className="mb-4 text-gray-400">
+                        <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">You are already subscribed to this creator.</h2>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 function PaymentPageContent({ avatar_url, userData, token }) {
