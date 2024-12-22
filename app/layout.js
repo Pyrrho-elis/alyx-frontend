@@ -2,6 +2,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "./components/Nav";
+import { Analytics } from "@vercel/analytics/react"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -46,6 +47,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-custom-gradient`}
       >
+        <Analytics/>
         {/* <div className="bg-custom-gradient"> */}
         <Navbar />
         <SidebarProvider>
