@@ -26,6 +26,7 @@ export async function POST(req) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'x-api-key': process.env.PAYMENT_API_KEY
             },
             body: JSON.stringify({
                 phone_number,

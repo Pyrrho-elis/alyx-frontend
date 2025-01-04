@@ -180,6 +180,7 @@ function PaymentPageContent({ avatar_url, userData, token }) {
                             <p className="text-lg font-semibold text-gray-800">
                                 {userData.creator_id}'s Community
                             </p>
+                            <p className='text-sm'>Amount: {userData.price}</p>
                         </div>
                     </div>
                     <div className="space-y-4">

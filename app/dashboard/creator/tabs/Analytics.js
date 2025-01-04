@@ -30,7 +30,7 @@ export default function Analytics() {
     const fetchAnalytics = async (username) => {
         try {
             const response = await fetch(`/api/analytics/revenue?creator_id=${username}`);
-            console.log(`/api/analytics/revenue?creator_id=${username}`)
+            // console.log(`/api/analytics/revenue?creator_id=${username}`)
             if (!response.ok) throw new Error('Failed to fetch analytics');
             const data = await response.json();
             setAnalytics(data);
